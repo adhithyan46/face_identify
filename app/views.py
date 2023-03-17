@@ -1,8 +1,14 @@
 import math
+
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render, get_object_or_404
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils import timezone
+
+import accounts
+from face_rec_django.settings import LOGIN_REDIRECT_URL
 from .facerec.faster_video_stream import stream
 from .facerec.click_photos import click
 from .facerec.train_faces import trainer
@@ -18,6 +24,8 @@ from django.contrib import messages
 
 cache = TTLCache(maxsize=20, ttl=60)
 cache1 = TTLCache(maxsize=20, ttl=60)
+
+
 
 
 def identify1(frame, name, buf, buf_length, known_conf):
@@ -199,6 +207,7 @@ def identify_faces(video_capture1, video_capture2):
 
 
 
+@login_required(login_url='/accounts/login/')
 def index(request):
     return render(request, 'app/index.html')
 
@@ -266,7 +275,9 @@ def add_emp(request):
     else:
         form = EmployeeForm()
     return render(request, 'app/add_emp.html', {'form': form})
-
+def logout(request):
+    logout(request)
+    return redirect('index')
 
 
 def attendece_rep(request):
