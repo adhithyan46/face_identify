@@ -5,7 +5,7 @@
 <style>
 
     #myInput {
-      background-image: url('/static/css/searchicon.png');
+      background-image: url('/css/searchicon.png');
       background-position: 10px 10px;
       background-repeat: no-repeat;
       width: 100%;
@@ -43,41 +43,53 @@
 
 <div class="container" style="background-color: white; padding: 50px;">
 
-<form method="get" action="." style="margin: 0">
-    Enter Date: <input id="search_submit" type="date" name="search_box">
-    <button id="search_submit" type="submit">Submit</button>
+<h1>PERSONAL REPORT</h1>
 </form>
 <br>
 
-<strong>Date: {{ date|date:"D, d M, Y" }}</strong>
 
   <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for name.." style="float: right; padding: 10px;">
   <br>
 
-<table id="myTable">
-  <thead>
-    <tr>
-      <th>Employee ID</th>
-      <th>Employee Name</th>
-      <th>Entry Time</th>
-      <th>Exit Time</th>
-    </tr>
-  </thead>
-  <tbody>
+  <table id="myTable">
+    <tr class="header">
+      	<th width="200">Name</th>
+      	<th width="300">Detected_in</th>
+        <th width = "200">Detected_out</th>
+        <th width="200">Report</th>
+  	</tr>
+
+    {% for det in det_list %}
+
+        <tr>
+            <td>{{det.emp_id}}</td>
+            <td>{{det.rep}}</td>
+            <td>{{None}}</td>
+        </tr>
+
+  	{% endfor %}
     {% for det1 in det_list_out %}
-      {% for det2 in det_list_in %}
-        {% if det1.emp_id_id == det2.emp_id_id %}
-          <tr>
-            <td>{{ det1.emp_id_id }}</td>
+
+        <tr>
             <td>{{det1.emp_id}}</td>
-            <td>{{ det2.entry }}</td>
-            <td>{{ det1.out }}</td>
-          </tr>
-        {% endif %}
-      {% endfor %}
-    {% endfor %}
-  </tbody>
-</table>
+            <td>None</td>
+            <td>{{det1.out}}</td>
+
+        </tr>
+
+  	{% endfor %}
+  </table>
+</div>
+<div class="container" style="background-color: white; padding: 50px;">
+  <table id="myTable">
+    <tr class="header">
+      	<th width="200">ID</th>
+      	<th width="300">in</th>
+        <th width = "200">out</th>
+
+
+  </table>
+</div>
 
 
 <script>

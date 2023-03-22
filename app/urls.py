@@ -13,5 +13,9 @@ urlpatterns = [
     path('identify/', views.identify, name='identify'),
     path('add_emp/', views.add_emp, name='add_emp'),
     path('attendece_rep/', views.attendece_rep, name='attendece_rep'),
-    path('logout/',views.logout,name='logout')
+    path('report/',views.reportt,name='report'),
+    path('person/',views.person,name='person'),
+    path('logout/',views.logout,name='logout'),
+
+
 ]

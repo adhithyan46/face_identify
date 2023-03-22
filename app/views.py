@@ -3,16 +3,17 @@ import math
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render, get_object_or_404
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
+from django.db.models import Q
 
 import accounts
 from face_rec_django.settings import LOGIN_REDIRECT_URL
 from .facerec.faster_video_stream import stream
 from .facerec.click_photos import click
 from .facerec.train_faces import trainer
-from .models import Detected_out, Employee, Detected_in, Rep
+from .models import Detected_out, Employee, Detected_in, Rep, report
 from .forms import EmployeeForm
 import cv2
 import pickle
@@ -20,6 +21,11 @@ import face_recognition
 import datetime
 from cachetools import TTLCache
 from django.contrib import messages
+from django.http import FileResponse
+import io
+#from reportlab.pdfgen import canvas
+#from reportlab.lib.units import inch
+#from reportlab.lib.pagesizes import letter
 
 
 cache = TTLCache(maxsize=20, ttl=60)
@@ -27,7 +33,7 @@ cache1 = TTLCache(maxsize=20, ttl=60)
 
 
 
-
+@login_required(login_url='/accounts/login/')
 def identify1(frame, name, buf, buf_length, known_conf):
 
     if name in cache:
@@ -49,7 +55,7 @@ def identify1(frame, name, buf, buf_length, known_conf):
         except:
             pass 	        
 
-
+@login_required(login_url='/accounts/login/')
 def identify2(frame1, name1, buf1, buf_length1, known_conf1):
 
     if name1 in cache1:
@@ -73,7 +79,7 @@ def identify2(frame1, name1, buf1, buf_length1, known_conf1):
 
 
 
-
+@login_required(login_url='/accounts/login/')
 def predict(rgb_frame, knn_clf=None, model_path=None, distance_threshold=0.5):
 
     if knn_clf is None and model_path is None:
@@ -103,7 +109,7 @@ def predict(rgb_frame, knn_clf=None, model_path=None, distance_threshold=0.5):
     return [(pred, loc) if rec else ("unknown", loc) for pred, loc, rec in zip(knn_clf.predict(faces_encodings), X_face_locations, are_matches)]
 
 
-
+@login_required(login_url='/accounts/login/')
 def identify_faces(video_capture1, video_capture2):
 
     buf_length = 10
@@ -211,29 +217,29 @@ def identify_faces(video_capture1, video_capture2):
 def index(request):
     return render(request, 'app/index.html')
 
-
+@login_required(login_url='/accounts/login/')
 def video_stream(request):
     stream()
     return HttpResponseRedirect(reverse('index'))
 
-
+@login_required(login_url='/accounts/login/')
 def add_photos(request):
 	emp_list = Employee.objects.all()
 	return render(request, 'app/add_photos.html', {'emp_list': emp_list})
 
-
+@login_required(login_url='/accounts/login/')
 def click_photos(request, emp_id):
 	cam = cv2.VideoCapture(0)
 	emp = get_object_or_404(Employee, id=emp_id)
 	click(emp.name, emp.id, cam)
 	return HttpResponseRedirect(reverse('add_photos'))
 
-
+@login_required(login_url='/accounts/login/')
 def train_model(request):
 	trainer()
 	return HttpResponseRedirect(reverse('index'))
 
-
+@login_required(login_url='/accounts/login/')
 def detected(request):
 	if request.method == 'GET':
 		date_formatted = datetime.datetime.today().date()
@@ -244,7 +250,7 @@ def detected(request):
 
 	# det_list = Detected.objects.all().order_by('time_stamp').reverse()
 	return render(request, 'app/detected.html', {'det_list': det_list, 'date': date_formatted})
-
+@login_required(login_url='/accounts/login/')
 def detected_out(request):
 	if request.method == 'GET':
 		date_formatted = datetime.datetime.today().date()
@@ -255,14 +261,14 @@ def detected_out(request):
 
 	# det_list = Detected.objects.all().order_by('time_stamp').reverse()
 	return render(request, 'app/detectedout.html', {'det_list': det_list, 'date': date_formatted})
-
+@login_required(login_url='/accounts/login/')
 def identify(request):
     video_capture1 = cv2.VideoCapture(0)
     video_capture2 = cv2.VideoCapture(1)
     identify_faces(video_capture1, video_capture2)
     return HttpResponseRedirect(reverse('index'))
 
-
+@login_required(login_url='/accounts/login/')
 def add_emp(request):
     if request.method == "POST":
         form = EmployeeForm(request.POST)
@@ -275,12 +281,47 @@ def add_emp(request):
     else:
         form = EmployeeForm()
     return render(request, 'app/add_emp.html', {'form': form})
+
+@login_required(login_url='/accounts/login/')
 def logout(request):
     logout(request)
     return redirect('index')
+# def report(request):
+#     if request.method == 'GET':
+#         date_formatted = datetime.datetime.today().date()
+#         date = request.GET.get('search_box', None)
+#         if date is not None:
+#             date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+#         det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
+#         det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+#         report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+#         report_in = Detected_in.objects.all()
+#         report_out = Detected_out.objects.all()
 
 
+@login_required(login_url='/accounts/login/')
 def attendece_rep(request):
+    if request.method == 'GET':
+        date_formatted = datetime.datetime.today().date()
+        date = request.GET.get('search_box', None)
+        if date is not None:
+            date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+
+        det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
+        det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+        report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+
+        context = {
+            'det_list_out': det_list_out,
+            'det_list_in': det_list_in,
+            'date': date_formatted,
+            'report': report,
+        }
+
+    return render(request, 'app/attendencereport.html', context)
+
+
+"""def report(request):
     if request.method == 'GET':
         date_formatted = datetime.datetime.today().date()
         date = request.GET.get('search_box', None)
@@ -291,8 +332,86 @@ def attendece_rep(request):
         report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
         report_in = Detected_in.objects.all()
         report_out = Detected_out.objects.all()
+    return render(request, 'app/report.html', {'det_list_out': det_list_out,'det_list_in': det_list_in,'date': date_formatted, 'report' : report, 'report_in':report_in, 'report_out':report_out })"""
 
 
-	# det_list = Detected.objects.all().order_by('time_stamp').reverse()
-    return render(request, 'app/attendencereport.html', {'det_list_out': det_list_out,'det_list_in': det_list_in,'date': date_formatted, 'report' : report, 'report_in':report_in, 'report_out':report_out })
+@login_required(login_url='/accounts/login/')
+def reportt(request):
+    if request.method == 'GET':
+        date_formatted = datetime.datetime.today().date()
+        date = request.GET.get('search_box', None)
+        if date is not None:
+            date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+        det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
+        det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+        report1 = report.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+        report_in = Detected_in.objects.all()
+        report_out = Detected_out.objects.all()
+
+        # calculate total hours spent for each employee
+        # total_hours = {}
+        # for det_in in report_in:
+        #     emp_id = det_in.emp_id_id
+        #     if emp_id not in total_hours:
+        #         total_hours[emp_id] = 0
+        #     report_out = Detected_out.objects.filter(emp_id_id=emp_id, out__date=date_formatted).first()
+        #     if report_out:
+        #         total_hours[emp_id] += (report_out.out - det_in.entry).total_seconds() / 3600
+        context = {
+            'det_list_out': det_list_out,
+            'det_list_in': det_list_in,
+            'date': date_formatted,
+            'report1': report1,
+            'report_in':report_in,
+            'report_out':report_out,
+            #'total_hours':total_hours,
+
+        }
+
+    return render(request, 'app/report.html', context)
+
+
+
+# def person(request):
+#     if request.method=='POST':
+#         name=request.POST['Employee']
+#         detected_in=request.POST['Detected_ins']
+#         detected_out=request.POST['Detected_outs']
+#         report=request.POST['Reps']
+#         emps=Employee.object.all()
+#         context={
+#             'emps':emps
+#         }
+#         return render(request,'app/person.html')
+#     elif request.method=='GET':
+#         return render(request,'app/person.html')
+#     else:
+#         return HttpResponse("An exception occured")
+
+@login_required(login_url='/accounts/login/')
+def person(request):
+    if request.method == 'POST':
+        date_formatted = datetime.datetime.today().date()
+        date = request.GET.get('search_box', None)
+        if date is not None:
+            date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+        det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
+        det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+        report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+        report_in = Detected_in.objects.all()
+        report_out = Detected_out.objects.all()
+
+        context = {
+            'det_list_out': det_list_out,
+            'det_list_in': det_list_in,
+            'date': date_formatted,
+            'report': report,
+
+        }
+
+    return render(request, 'app/report.html',
+                  {'det_list_out': det_list_out, 'det_list_in': det_list_in, 'date': date_formatted, 'report': report,
+                   'report_in': report_in, 'report_out': report_out, 'total_hours': total_hours})
+
+
 

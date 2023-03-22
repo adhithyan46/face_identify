@@ -62,3 +62,18 @@ class Rep(models.Model):
         empentry = Detected_in.objects.get(entry = self.entry)
         empout = Detected_out.objects.get(out = self.out)
         return emp.name, empdep.department, empentry.entry, empout.out
+
+class report(models.Model):
+    emp_id = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True)
+    department = models.CharField(max_length=50)
+    entry = models.DateTimeField()
+    out = models.DateTimeField()
+    def __str__(self):
+        emp = Employee.objects.get(name=self.emp_id)
+        empdep = Employee.objects.get(department=self.department)
+        empentry = Detected_in.objects.get(entry = self.entry)
+        empout = Detected_out.objects.get(out = self.out)
+        return emp.name, empdep.department, empentry.entry, empout.out
+
+
+
