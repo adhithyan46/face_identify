@@ -15,6 +15,7 @@ urlpatterns = [
     path('attendece_rep/', views.attendece_rep, name='attendece_rep'),
     path('report/',views.reportt,name='report'),
     path('person/',views.person,name='person'),
+    #path('admin/',views.admin,name='admin'),
     path('logout/',views.logout,name='logout'),
 
 

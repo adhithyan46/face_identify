@@ -1,6 +1,6 @@
 import math
 
-from django.contrib.auth import login
+from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponse
@@ -30,6 +30,22 @@ import io
 
 cache = TTLCache(maxsize=20, ttl=60)
 cache1 = TTLCache(maxsize=20, ttl=60)
+
+
+
+# def LoginPage(request):
+#     if request.method=='POST':
+#         username=request.POST.get('username')
+#         pass1=request.POST.get('pass')
+#         user=authenticate(request,username=username,password=pass1)
+#         if user is not None:
+#             login(request,user)
+#             return redirect('home')
+#         else:
+#             return HttpResponse ("Username or Password is incorrect!!!")
+#
+#     return render (request,'login.html')
+
 
 
 
@@ -285,7 +301,7 @@ def add_emp(request):
 @login_required(login_url='/accounts/login/')
 def logout(request):
     logout(request)
-    return redirect('index')
+    return redirect('Loginpage')
 # def report(request):
 #     if request.method == 'GET':
 #         date_formatted = datetime.datetime.today().date()
@@ -297,7 +313,8 @@ def logout(request):
 #         report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
 #         report_in = Detected_in.objects.all()
 #         report_out = Detected_out.objects.all()
-
+def admin(request):
+    return redirect('admin:index')
 
 @login_required(login_url='/accounts/login/')
 def attendece_rep(request):
@@ -348,7 +365,7 @@ def reportt(request):
         report_in = Detected_in.objects.all()
         report_out = Detected_out.objects.all()
 
-        # calculate total hours spent for each employee
+        # #calculate total hours spent for each employee
         # total_hours = {}
         # for det_in in report_in:
         #     emp_id = det_in.emp_id_id
@@ -411,7 +428,7 @@ def person(request):
 
     return render(request, 'app/report.html',
                   {'det_list_out': det_list_out, 'det_list_in': det_list_in, 'date': date_formatted, 'report': report,
-                   'report_in': report_in, 'report_out': report_out, 'total_hours': total_hours})
+                   'report_in': report_in, 'report_out': report_out })
 
 
 
