@@ -11,12 +11,10 @@
     <form method="POST">{% csrf_token %}
         <div class="fieldWrapper">
             {{form| crispy}}
-            
+
 
         </div>
         <button type="submit" class="save btn btn-info">Save</button>
     </form>
     </div>
 {% endblock %}
-
-

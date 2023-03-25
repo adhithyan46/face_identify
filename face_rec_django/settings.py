@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'crispy_forms',
     'accounts',
+
 ]
 
 MIDDLEWARE = [
@@ -116,7 +117,7 @@ USE_I18N = True
 USE_L10N = True
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
-
+AUTH_USER_MODEL='accounts.CustomUser'
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 

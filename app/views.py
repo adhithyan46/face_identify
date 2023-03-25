@@ -1,5 +1,7 @@
 import math
+from urllib import request
 
+from django.contrib.auth import authenticate
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render, get_object_or_404
@@ -8,7 +10,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Q
 
-import accounts
+from accounts.forms import UserAdminCreationForm
+#import accounts
 from face_rec_django.settings import LOGIN_REDIRECT_URL
 from .facerec.faster_video_stream import stream
 from .facerec.click_photos import click
@@ -36,16 +39,19 @@ cache1 = TTLCache(maxsize=20, ttl=60)
 # def LoginPage(request):
 #     if request.method=='POST':
 #         username=request.POST.get('username')
-#         pass1=request.POST.get('pass')
-#         user=authenticate(request,username=username,password=pass1)
+#         password=request.POST.get('pass')
+#         user=authenticate(request,username=username,password=password)
 #         if user is not None:
 #             login(request,user)
-#             return redirect('home')
+#             if user.is_admin:
+#                 return redirect('index')
+#             else:
+#                 return redirect('index')
 #         else:
 #             return HttpResponse ("Username or Password is incorrect!!!")
 #
-#     return render (request,'login.html')
-
+#     return render (request,'index.html')
+#
 
 
 
@@ -298,7 +304,50 @@ def add_emp(request):
         form = EmployeeForm()
     return render(request, 'app/add_emp.html', {'form': form})
 
-@login_required(login_url='/accounts/login/')
+# def register(request):
+#     if request.method == "POST":
+#         form = EmployeeForm(request.POST)
+#         if form.is_valid():
+#             emp = form.save()
+#             # post.author = request.user
+#             # post.published_date = timezone.now()
+#             # post.save()
+#             return HttpResponseRedirect(reverse('index'))
+#     else:
+#         form = registrationForm()
+#     return render(request, 'app/register.html', {'form': form})
+    # if request.method == 'POST':
+    #     id = request.POST.get('id')
+    #     name = request.POST.get('name')
+    #     contact_number = request.POST.get('contact_number')
+    #     date_of_birth = request.POST.get('date_of_birth')
+    #     date_of_joining = request.POST.get('date_of_joining')
+    #     department = request.POST.get('department')
+    #     designation = request.POST.get('designation')
+    #     gender = request.POST.get('gender')
+    #     team = request.POST.get('team')
+    #     password = request.POST.get('password')
+
+        # Create a new registration instance and save it to the database
+        # registration.objects.create(
+        #     id=id,
+        #     name=name,
+        #     contact_number=contact_number,
+        #     date_of_birth=date_of_birth,
+        #     date_of_joining=date_of_joining,
+        #     department=department,
+        #     designation=designation,
+        #     gender=gender,
+        #     team=team,
+        #     password=password,
+        # )
+        #
+        # messages.success(request, 'Registration successful')
+        # return redirect('register')
+
+
+
+#@login_required(login_url='/app/registration/login/')
 def logout(request):
     logout(request)
     return redirect('Loginpage')
@@ -313,6 +362,8 @@ def logout(request):
 #         report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
 #         report_in = Detected_in.objects.all()
 #         report_out = Detected_out.objects.all()
+
+
 def admin(request):
     return redirect('admin:index')
 
@@ -432,3 +483,47 @@ def person(request):
 
 
 
+
+# def add_emp(request):
+#     form1=LoginRegister()
+#     form2=EmployeeRegister()
+#     if request.method=='POST':
+#         form1=LoginRegister(request.POST)
+#         form2=EmployeeRegister(request.POST,request.FILES)
+#         if form1.is_valid() and form2.is_valid():
+#             a=form1.save(commit=False)
+#             a.is_admin=True
+#             a.save()
+#             user1=form2.save(commit=False)
+#             user1.user=a
+#             user1.save()
+#             return redirect('')
+#
+#     return render(request,'registration.html',{'form1':form1,'form2':form2})
+
+
+
+# def loginn(request):
+#     if request.method == 'POST':
+#         username = request.POST.get('uname')
+#         password = request.POST.get('pass')
+#         user = authenticate(request, username=username, password=password)
+#         if user is not None:
+#             login(request, user)
+#             if user.is_admin:
+#                 return redirect('index')
+#             elif user.is_employee:
+#                 return redirect('index')
+#
+#         else:
+#             messages.info(request, 'Invalid Credentials')
+#     return render(request, 'accounts/login.html')
+@login_required(login_url='/accounts/login/')
+def register(request):
+    form = UserAdminCreationForm()
+    if request.method == 'POST':
+        form = UserAdminCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('register')
+    return render(request, 'register.html', {'form': form})

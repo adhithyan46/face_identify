@@ -73,7 +73,6 @@
             <td>{{det1.emp_id}}</td>
             <td>{{ det2.entry }}</td>
             <td>{{ det1.out }}</td>
-            <td></td>
           </tr>
         {% endif %}
       {% endfor %}
@@ -89,7 +88,6 @@
       <th>Employee Name</th>
       <th>Entry Time</th>
       <th>Exit Time</th>
-      <th>Total_hours</th>
     </tr>
   </thead>
   <tbody>
@@ -101,8 +99,6 @@
             <td>{{det1.emp_id}}</td>
             <td>{{ det2.entry }}</td>
             <td>{{ det1.out }}</td>
-            {%for hr in total_hours%}
-            <td>{{hr.total_hours}}</td>
           </tr>
         {% endif %}
       {% endfor %}

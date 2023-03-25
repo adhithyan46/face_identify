@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from datetime import datetime
 import os
@@ -19,6 +20,8 @@ class Employee(models.Model):
 	designation = models.CharField(max_length=50)
 	gender = models.CharField(max_length=50, choices=sex_choice, default='Male')
 	team = models.CharField(max_length=50)
+	#password=models.CharField(max_length=50,default='')
+
 
 	def __str__(self):
 		return self.name
@@ -65,21 +68,21 @@ class Rep(models.Model):
         return emp.name, empdep.department, empentry.entry, empout.out
 
 
-class Hours(models.Model):
-	emp_id = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True)
-	total_hours = models.CharField(max_length=50)
-
-	def __str__(self):
-		return f"{self.emp_id.name} - {self.total_hours} hours worked"
-
-	def calculate_hours_worked(self):
-		attendance_in = Detected_in.objects.filter(emp_id=self.emp_id)
-		attendance_out = Detected_out.objects.filter(emp_id=self.emp_id)
-
-		if attendance_in and attendance_out:
-			total_hours_worked = attendance_out.last().out - attendance_in.last().entry
-			self.total_hours = total_hours_worked.total_seconds() / 3600
-			self.save()
+# class Hours(models.Model):
+# 	emp_id = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True)
+# 	total_hours = models.CharField(max_length=50)
+#
+# 	def __str__(self):
+# 		return f"{self.emp_id.name} - {self.total_hours} hours worked"
+#
+# 	def calculate_hours_worked(self):
+# 		attendance_in = Detected_in.objects.filter(emp_id=self.emp_id)
+# 		attendance_out = Detected_out.objects.filter(emp_id=self.emp_id)
+#
+# 		if attendance_in and attendance_out:
+# 			total_hours_worked = attendance_out.last().out - attendance_in.last().entry
+# 			self.total_hours = total_hours_worked.total_seconds() / 3600
+# 			self.save()
 
 
 class report(models.Model):
@@ -93,6 +96,33 @@ class report(models.Model):
         empentry = Detected_in.objects.get(entry = self.entry)
         empout = Detected_out.objects.get(out = self.out)
         return emp.name, empdep.department, empentry.entry, empout.out
+
+
+
+# class CustomUser(AbstractUser):
+#     username = None
+#     email = models.EmailField(_('email address'), unique=True)
+#
+#     USERNAME_FIELD = 'email'
+#     REQUIRED_FIELDS = []
+#
+#     objects = CustomUserManager()
+
+# class Employee(models.Model):
+# 	id = models.CharField(primary_key=True, max_length=10)
+# 	#user=models.OneToOneField(Login,on_delete=models.CASCADE,related_name=)
+# 	name = models.CharField(max_length=100)
+# 	contact_number = models.CharField(max_length=100)
+# 	date_of_birth = models.CharField(max_length=100)
+# 	date_of_joining = models.CharField(max_length=100)
+# 	department = models.CharField(max_length=100)
+# 	designation = models.CharField(max_length=100)
+# 	gender = models.CharField(max_length=100, choices=sex_choice, default='Male')
+# 	team = models.CharField(max_length=100)
+#
+# 	def __str__(self):
+# 		return self.name
+
 
 
 

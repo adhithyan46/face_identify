@@ -1,9 +1,11 @@
 from django.urls import path
 
+import accounts
 from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    #path('login/',views.LoginPage,name='login'),
     path('video_stream/', views.video_stream, name='video_stream'),
     path('add_photos/', views.add_photos, name='add_photos'),
     path('add_photos/<slug:emp_id>/', views.click_photos, name='click_photos'),
@@ -15,8 +17,8 @@ urlpatterns = [
     path('attendece_rep/', views.attendece_rep, name='attendece_rep'),
     path('report/',views.reportt,name='report'),
     path('person/',views.person,name='person'),
-    #path('admin/',views.admin,name='admin'),
     path('logout/',views.logout,name='logout'),
+    #path('register/',views.register,name='register'),
 
 
 ]
