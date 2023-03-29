@@ -1,7 +1,7 @@
 import math
 from urllib import request
 
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render, get_object_or_404
@@ -10,14 +10,14 @@ from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Q
 
-from accounts.forms import UserAdminCreationForm
+
 #import accounts
 from face_rec_django.settings import LOGIN_REDIRECT_URL
 from .facerec.faster_video_stream import stream
 from .facerec.click_photos import click
 from .facerec.train_faces import trainer
 from .models import Detected_out, Employee, Detected_in, Rep, report
-from .forms import EmployeeForm
+from .forms import EmployeeForm, LoginRegister
 import cv2
 import pickle
 import face_recognition
@@ -46,16 +46,16 @@ cache1 = TTLCache(maxsize=20, ttl=60)
 #             if user.is_admin:
 #                 return redirect('index')
 #             else:
-#                 return redirect('index')
+#                 return redirect('report2')
 #         else:
-#             return HttpResponse ("Username or Password is incorrect!!!")
+#             return HttpResponse("Username or Password is incorrect!!!")
 #
 #     return render (request,'index.html')
-#
 
 
 
-@login_required(login_url='/accounts/login/')
+
+#@login_required(login_url='/app/login/')
 def identify1(frame, name, buf, buf_length, known_conf):
 
     if name in cache:
@@ -77,7 +77,7 @@ def identify1(frame, name, buf, buf_length, known_conf):
         except:
             pass 	        
 
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/app/login/')
 def identify2(frame1, name1, buf1, buf_length1, known_conf1):
 
     if name1 in cache1:
@@ -101,7 +101,7 @@ def identify2(frame1, name1, buf1, buf_length1, known_conf1):
 
 
 
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/app/login/')
 def predict(rgb_frame, knn_clf=None, model_path=None, distance_threshold=0.5):
 
     if knn_clf is None and model_path is None:
@@ -131,7 +131,7 @@ def predict(rgb_frame, knn_clf=None, model_path=None, distance_threshold=0.5):
     return [(pred, loc) if rec else ("unknown", loc) for pred, loc, rec in zip(knn_clf.predict(faces_encodings), X_face_locations, are_matches)]
 
 
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/app/login/')
 def identify_faces(video_capture1, video_capture2):
 
     buf_length = 10
@@ -235,33 +235,33 @@ def identify_faces(video_capture1, video_capture2):
 
 
 
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/app/login/')
 def index(request):
     return render(request, 'app/index.html')
 
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/app/login/')
 def video_stream(request):
     stream()
     return HttpResponseRedirect(reverse('index'))
 
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/app/login/')
 def add_photos(request):
 	emp_list = Employee.objects.all()
 	return render(request, 'app/add_photos.html', {'emp_list': emp_list})
 
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/app/login/')
 def click_photos(request, emp_id):
 	cam = cv2.VideoCapture(0)
 	emp = get_object_or_404(Employee, id=emp_id)
 	click(emp.name, emp.id, cam)
 	return HttpResponseRedirect(reverse('add_photos'))
 
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/accounts/login/')
 def train_model(request):
 	trainer()
 	return HttpResponseRedirect(reverse('index'))
 
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/app/login/')
 def detected(request):
 	if request.method == 'GET':
 		date_formatted = datetime.datetime.today().date()
@@ -272,7 +272,7 @@ def detected(request):
 
 	# det_list = Detected.objects.all().order_by('time_stamp').reverse()
 	return render(request, 'app/detected.html', {'det_list': det_list, 'date': date_formatted})
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/app/login/')
 def detected_out(request):
 	if request.method == 'GET':
 		date_formatted = datetime.datetime.today().date()
@@ -283,28 +283,15 @@ def detected_out(request):
 
 	# det_list = Detected.objects.all().order_by('time_stamp').reverse()
 	return render(request, 'app/detectedout.html', {'det_list': det_list, 'date': date_formatted})
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/accounts/login/')
 def identify(request):
     video_capture1 = cv2.VideoCapture(0)
     video_capture2 = cv2.VideoCapture(1)
     identify_faces(video_capture1, video_capture2)
     return HttpResponseRedirect(reverse('index'))
 
-@login_required(login_url='/accounts/login/')
-def add_emp(request):
-    if request.method == "POST":
-        form = EmployeeForm(request.POST)
-        if form.is_valid():
-            emp = form.save()
-            # post.author = request.user
-            # post.published_date = timezone.now()
-            # post.save()
-            return HttpResponseRedirect(reverse('index'))
-    else:
-        form = EmployeeForm()
-    return render(request, 'app/add_emp.html', {'form': form})
-
-# def register(request):
+#@login_required(login_url='/accounts/login/')
+# def add_emp(request):
 #     if request.method == "POST":
 #         form = EmployeeForm(request.POST)
 #         if form.is_valid():
@@ -314,43 +301,15 @@ def add_emp(request):
 #             # post.save()
 #             return HttpResponseRedirect(reverse('index'))
 #     else:
-#         form = registrationForm()
-#     return render(request, 'app/register.html', {'form': form})
-    # if request.method == 'POST':
-    #     id = request.POST.get('id')
-    #     name = request.POST.get('name')
-    #     contact_number = request.POST.get('contact_number')
-    #     date_of_birth = request.POST.get('date_of_birth')
-    #     date_of_joining = request.POST.get('date_of_joining')
-    #     department = request.POST.get('department')
-    #     designation = request.POST.get('designation')
-    #     gender = request.POST.get('gender')
-    #     team = request.POST.get('team')
-    #     password = request.POST.get('password')
-
-        # Create a new registration instance and save it to the database
-        # registration.objects.create(
-        #     id=id,
-        #     name=name,
-        #     contact_number=contact_number,
-        #     date_of_birth=date_of_birth,
-        #     date_of_joining=date_of_joining,
-        #     department=department,
-        #     designation=designation,
-        #     gender=gender,
-        #     team=team,
-        #     password=password,
-        # )
-        #
-        # messages.success(request, 'Registration successful')
-        # return redirect('register')
+#         form = EmployeeForm()
+#     return render(request, 'app/add_emp.html', {'form': form})
 
 
 
 #@login_required(login_url='/app/registration/login/')
-def logout(request):
-    logout(request)
-    return redirect('Loginpage')
+# def logout(request):
+#     logout(request)
+#     return redirect('LoginPage')
 # def report(request):
 #     if request.method == 'GET':
 #         date_formatted = datetime.datetime.today().date()
@@ -363,11 +322,11 @@ def logout(request):
 #         report_in = Detected_in.objects.all()
 #         report_out = Detected_out.objects.all()
 
-
+#@login_required(login_url='/app/login/')
 def admin(request):
-    return redirect('admin:index')
+    return redirect(request,'admin:index')
 
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/app/login/')
 def attendece_rep(request):
     if request.method == 'GET':
         date_formatted = datetime.datetime.today().date()
@@ -386,7 +345,7 @@ def attendece_rep(request):
             'report': report,
         }
 
-    return render(request, 'app/attendencereport.html', context)
+    return render(request, 'attendencereport.html', context)
 
 
 """def report(request):
@@ -403,7 +362,7 @@ def attendece_rep(request):
     return render(request, 'app/report.html', {'det_list_out': det_list_out,'det_list_in': det_list_in,'date': date_formatted, 'report' : report, 'report_in':report_in, 'report_out':report_out })"""
 
 
-@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/app/login/')
 def reportt(request):
     if request.method == 'GET':
         date_formatted = datetime.datetime.today().date()
@@ -440,23 +399,9 @@ def reportt(request):
 
 
 
-# def person(request):
-#     if request.method=='POST':
-#         name=request.POST['Employee']
-#         detected_in=request.POST['Detected_ins']
-#         detected_out=request.POST['Detected_outs']
-#         report=request.POST['Reps']
-#         emps=Employee.object.all()
-#         context={
-#             'emps':emps
-#         }
-#         return render(request,'app/person.html')
-#     elif request.method=='GET':
-#         return render(request,'app/person.html')
-#     else:
-#         return HttpResponse("An exception occured")
 
-@login_required(login_url='/accounts/login/')
+
+#@login_required(login_url='/app/login/')
 def person(request):
     if request.method == 'POST':
         date_formatted = datetime.datetime.today().date()
@@ -484,46 +429,66 @@ def person(request):
 
 
 
-# def add_emp(request):
-#     form1=LoginRegister()
-#     form2=EmployeeRegister()
-#     if request.method=='POST':
-#         form1=LoginRegister(request.POST)
-#         form2=EmployeeRegister(request.POST,request.FILES)
-#         if form1.is_valid() and form2.is_valid():
-#             a=form1.save(commit=False)
-#             a.is_admin=True
-#             a.save()
-#             user1=form2.save(commit=False)
-#             user1.user=a
-#             user1.save()
-#             return redirect('')
-#
-#     return render(request,'registration.html',{'form1':form1,'form2':form2})
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
+# from django.shortcuts import render, redirect
 
-
-
-# def loginn(request):
+# def login_view(request):
 #     if request.method == 'POST':
-#         username = request.POST.get('uname')
-#         password = request.POST.get('pass')
+#         username = request.POST['username']
+#         password = request.POST['password']
 #         user = authenticate(request, username=username, password=password)
 #         if user is not None:
 #             login(request, user)
-#             if user.is_admin:
-#                 return redirect('index')
-#             elif user.is_employee:
-#                 return redirect('index')
-#
+#             request.session['user_id'] = user.id
+#             return redirect('home')
 #         else:
-#             messages.info(request, 'Invalid Credentials')
-#     return render(request, 'accounts/login.html')
-@login_required(login_url='/accounts/login/')
-def register(request):
-    form = UserAdminCreationForm()
+#             error_msg = 'Invalid login credentials.'
+#     else:
+#         error_msg = ''
+#     return render(request, 'login.html', {'error_msg': error_msg})
+#@login_required(login_url='/app/login/')
+def logout_view(request):
+    logout(request)
+    return redirect('login_view')
+
+
+from django.contrib.auth import authenticate, login
+#@login_required(login_url='/app/login/')
+def login_view(request):
     if request.method == 'POST':
-        form = UserAdminCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('register')
-    return render(request, 'register.html', {'form': form})
+        username = request.POST['user']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            if user.is_staff:
+                return redirect('home')
+            else:
+                return redirect('index')
+        else:
+            messages.info(request,'Invalid Credentials')
+    return render(request,'app/login.html')
+
+
+#@login_required(login_url='/app/login/')
+def add_emp(request):
+    form1=LoginRegister()
+    form2=EmployeeForm()
+    if request.method=='POST':
+        form1=LoginRegister(request.POST)
+        form2=EmployeeForm(request.POST,request.FILES)
+        if form1.is_valid() and form2.is_valid():
+            a=form1.save(commit=False)
+            a.is_admin=True
+            a.save()
+            c=form2.save(commit=False)
+            c.user=a
+            c.save()
+            messages.info(request,'User Registered Successfully')
+            return redirect('index')
+    return render(request,'app/add_emp.html',{'form1':form1,'form2':form2})
+
+#@login_required(login_url='/app/login/')
+def home(request):
+    return render(request, 'app/home.html')

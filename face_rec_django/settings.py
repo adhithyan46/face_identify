@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'crispy_forms',
-    'accounts',
 
 ]
 
@@ -117,7 +116,7 @@ USE_I18N = True
 USE_L10N = True
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
-AUTH_USER_MODEL='accounts.CustomUser'
+AUTH_USER_MODEL='app.Login'
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
@@ -129,5 +128,5 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media') 
 MEDIA_URL = '/media/'
 
-LOGIN_REDIRECT_URL='/'
-LOGOUT_REDIRECT_URL='/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+

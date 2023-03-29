@@ -1,4 +1,5 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.models import AbstractUser, PermissionsMixin, Permission
 from django.db import models
 from datetime import datetime
 import os
@@ -10,9 +11,19 @@ sex_choice = (
 )
 
 
+class Login(AbstractUser):
+	is_employee=models.BooleanField(default=False)
+
+# class Login(AbstractUser):
+# 	is_admin=models.BooleanField(default=False)
+# 	is_Employee=models.BooleanField(default=False)
+
 class Employee(models.Model):
+
+	user = models.OneToOneField(Login, on_delete=models.CASCADE, related_name='employee')
 	id = models.CharField(primary_key=True, max_length=10)
-	name = models.CharField(max_length=50)
+	#name=models.CharField(max_length=50,unique=True,default='')
+	email=models.EmailField(max_length=50,unique=True)
 	contact_number = models.CharField(max_length=50)
 	date_of_birth = models.CharField(max_length=50)
 	date_of_joining = models.CharField(max_length=50)
@@ -20,11 +31,9 @@ class Employee(models.Model):
 	designation = models.CharField(max_length=50)
 	gender = models.CharField(max_length=50, choices=sex_choice, default='Male')
 	team = models.CharField(max_length=50)
-	#password=models.CharField(max_length=50,default='')
-
-
 	def __str__(self):
 		return self.name
+
 
 	def num_photos(self):
 		try:
@@ -122,7 +131,37 @@ class report(models.Model):
 #
 # 	def __str__(self):
 # 		return self.name
+# from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+#
+# class employeeManager(BaseUserManager):
+#     def create_user(self, email, password=None, **extra_fields):
+#         if not email:
+#             raise ValueError('Email address is required')
+#         user = self.model(email=self.normalize_email(email), **extra_fields)
+#         user.set_password(password)
+#         user.save(using=self._db)
+#         return user
+#
+#     def create_superuser(self, email, password=None, **extra_fields):
+#         extra_fields.setdefault('is_staff', True)
+#         extra_fields.setdefault('is_superuser', True)
+#         return self.create_user(email, password, **extra_fields)
 
+# class MyUser(AbstractBaseUser, PermissionsMixin):
+#     email = models.EmailField(unique=True)
+#     first_name = models.CharField(max_length=30)
+#     last_name = models.CharField(max_length=30)
+#     is_active = models.BooleanField(default=True)
+#     is_staff = models.BooleanField(default=False)
+#
+#     USERNAME_FIELD = 'email'
+#
+#     objects = MyUserManager()
+# class Login(AbstractUser):
+# 	is_admin=models.BooleanField(default=False)
+# 	is_Employee=models.BooleanField(default=False)
+#
+#
 
 
 
