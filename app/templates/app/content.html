@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="col-lg-10">
+    {% for message in messages %}
+    <div class="alert alert-primary" role="alert">
+        {{message}}
+    </div>
+    {% endfor %}
+    <div class="card">
+        <div class="card-header">
+            <strong class="card-title">YOUR COMPLAINTS</strong>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">SI No</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Subject</th>
+                    <th scope="col">Complaint</th>
+<!--                    <th scope="col">Date</th>-->
+                    <th scope="col">Reply</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for n in Content %}
+                <tr>
+                    <th scope="row">{{forloop.counter}}</th>
+                    <td>{{n.user.user}}</td>
+                    <td>{{n.subject}}</td>
+                    <td>{{n.complaint}}</td>
+<!--                    <td>{{n.date}}</td>-->
+                    <td>
+                        {% if n.reply == None %}
+                        <p>No Reply Yet..</p>
+                        {% else %}
+                        {{n.reply}}
+                        {% endif %}
+                    </td>
+
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

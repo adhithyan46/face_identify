@@ -16,8 +16,8 @@ from face_rec_django.settings import LOGIN_REDIRECT_URL
 from .facerec.faster_video_stream import stream
 from .facerec.click_photos import click
 from .facerec.train_faces import trainer
-from .models import Detected_out, Employee, Detected_in, Rep, report, Login
-from .forms import EmployeeForm, LoginRegister
+from .models import Detected_out, Employee, Detected_in, Rep, report, Login, Content
+from .forms import EmployeeForm, LoginRegister, ContentForm
 import cv2
 import pickle
 import face_recognition
@@ -465,7 +465,7 @@ def login_view(request):
             if user.is_user:
                 return redirect('index')
             elif user.is_staff:
-                return redirect('home')
+                return redirect('index')
             else:
                 return redirect('index')
         else:
@@ -529,73 +529,25 @@ def add_emp(request):
             user1.save()
             return redirect('index')
     return render(request,'app/add_emp.html',{'form1':form1,'form2':form2})
-# def add_emp(request):
-#     form1 = LoginRegister()
-#     form2 = EmployeeForm()
-#     if request.method == 'POST':
-#         form1 = LoginRegister(request.POST)
-#         form2 = EmployeeForm(request.POST)
-#
-#         if form1.is_valid() and form2.is_valid():
-#             # Check if a Login instance with the same username already exists
-#             username = form1.cleaned_data['username']
-#             existing_login = Login.objects.filter(username=username).first()
-#             if existing_login:
-#                 # Use the existing Login instance
-#                 login_instance = existing_login
-#             else:
-#                 # Create a new Login instance
-#                 login_instance = form1.save(commit=False)
-#                 login_instance.is_user = True
-#                 login_instance.save()
-#
-#             # Create the Employee instance and associate it with the Login instance
-#             employee_instance = form2.save(commit=False)
-#             employee_instance.user = login_instance
-#             employee_instance.save()
-#
-#             return redirect('index')
-#     return render(request, 'app/add_emp.html', {'form1': form1, 'form2': form2})
-# def add_emp(request):
-#     form1 = LoginRegister()
-#     form2 = EmployeeForm()
-#     if request.method == 'POST':
-#         form1 = LoginRegister(request.POST)
-#         form2 = EmployeeForm(request.POST)
-#
-#         if form1.is_valid() and form2.is_valid():
-#             # Check if a Login instance with the same username already exists
-#             username = form1.cleaned_data.get('username')
-#             # existing_login = Login.objects.filter(username=username).first()
-#             # print(existing_login)
-#             login_instance = form1.save(commit=True)
-#             login_instance.is_user = True
-#             # login_instance.save()
-#             # if existing_login:
-#             #     # Use the existing Login instance
-#             #     login_instance = existing_login
-#             # else:
-#             #     # Create a new Login instance
-#             #     login_instance = form1.save(commit=False)
-#             #     login_instance.is_user = True
-#             #     login_instance.save()
-#
-#             # Create the Employee instance and associate it with the Login instance
-#             employee_instance = form2.save(commit=False)
-#             employee_instance.user = login_instance
-#             employee_instance.save()
-#
-#             return redirect('index')
-#         else:
-#             # Print out the errors to help with debugging
-#             print(form1.errors)
-#             print(form2.errors)
-#
-#     # Print out the existing Login instances in the database
-#     existing_logins = Login.objects.all()
-#     print(existing_logins)
-#
-#     return render(request, 'app/add_emp.html', {'form1': form1, 'form2': form2})
 
 
 
+def Content_add(request):
+    form = ContentForm()
+    u = request.user
+    if request.method == 'POST':
+        form = ContentForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.user = u
+            obj.save()
+            messages.info(request, 'Content Registered Successfully')
+            return redirect('Contentt')
+    else:
+        form = ContentForm()
+    return render(request, 'app/content_add.html', {'form': form})
+
+
+def Contentt(request):
+    n = Content.objects.filter(user=request.user)
+    return render(request, 'app/content.html', {'Content': n})

@@ -1,10 +1,12 @@
+import datetime
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.forms import DateInput
 
 #from django.contrib.auth.forms import UserCreationForm
 
-from .models import Employee, Login
+from .models import Employee, Login, Content
 
 
 # class EmployeeForm(forms.ModelForm):
@@ -31,22 +33,29 @@ class EmployeeForm(forms.ModelForm):
             super(EmployeeForm, self).__init__(*args, **kwargs)
             self.fields['user'].queryset = Login.objects.filter(is_user=True).exclude(user__isnull=False)
 
+
+
+class ContentForm(forms.ModelForm):
+    #date = forms.DateField(widget=DateInput,input_formats=['%m/%d%y'])
+
+    class Meta:
+        model = Content
+        fields = ('subject', 'content')
+
+    # def clean_date(self):
+    #     date = self.cleaned_data['date']
+    #
+    #     if date != datetime.date.today():
+    #         raise forms.ValidationError("Invalid Date")
+    #     return date
+
+
+
+
 # class ManagerForm(forms.ModelForm):
 #     class Meta:
 #         model=Manager
 #         fields='__all__'
 #         exclude=('user',)
 
-# from django.contrib.auth import get_user_model
-# from django.contrib.auth.forms import UserCreationForm
-#
-#
-# class UserAdminCreationForm(UserCreationForm):
-#     """
-#     A Custom form for creating new users.
-#     """
-#
-#     class Meta:
-#         model = get_user_model()
-#         fields = ['email']
 
