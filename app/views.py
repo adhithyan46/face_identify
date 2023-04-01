@@ -16,7 +16,7 @@ from face_rec_django.settings import LOGIN_REDIRECT_URL
 from .facerec.faster_video_stream import stream
 from .facerec.click_photos import click
 from .facerec.train_faces import trainer
-from .models import Detected_out, Employee, Detected_in, Rep, report
+from .models import Detected_out, Employee, Detected_in, Rep, report, Login
 from .forms import EmployeeForm, LoginRegister
 import cv2
 import pickle
@@ -345,7 +345,7 @@ def attendece_rep(request):
             'report': report,
         }
 
-    return render(request, 'attendencereport.html', context)
+    return render(request, 'app/attendencereport.html', context)
 
 
 """def report(request):
@@ -457,38 +457,145 @@ from django.contrib.auth import authenticate, login
 #@login_required(login_url='/app/login/')
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST['user']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
+        email = request.POST.get('user')
+        password = request.POST.get('password')
+        user = authenticate(request, email=email,password=password)
         if user is not None:
             login(request, user)
-            if user.is_staff:
+            if user.is_user:
+                return redirect('index')
+            elif user.is_staff:
                 return redirect('home')
             else:
                 return redirect('index')
         else:
             messages.info(request,'Invalid Credentials')
     return render(request,'app/login.html')
+# def login_view(request):
+#     if request.method == 'POST':
+#         email = request.POST.get('email') # use 'email' instead of 'uname'
+#         password = request.POST.get('Password')
+#         try:
+#             user = Login.objects.get(email=email, is_user=True)
+#         except Login.DoesNotExist:
+#             user = None
+#         if user is not None and user.check_password(password):
+#             login(request, user)
+#             if user.is_staff:
+#                 return redirect('index')
+#             else:
+#                 return redirect('index')
+#         else:
+#             messages.info(request,'Invalid Credentials')
+#     return render(request,'app/login.html')
 
 
-#@login_required(login_url='/app/login/')
+# # @login_required(login_url='/app/login/')
+# def manager_add(request):
+#     form1=LoginRegister()
+#     form2=ManagerForm()
+#     if request.method=='POST':
+#         form1=LoginRegister(request.POST)
+#         form2=EmployeeForm(request.POST)
+#         if form1.is_valid() and form2.is_valid():
+#             a=form1.save(commit=False)
+#             a.is_manager=True
+#             a.save()
+#             user1=form2.save(commit=False)
+#             user1.user=a
+#             user1.save()
+#             messages.info(request,'User Registered Successfully')
+#             return redirect('index')
+#     return render(request,'app/employee_add.html',{'form1':form1,'form2':form2})
+
+# @login_required(login_url='/app/login/')
+def home(request):
+    return render(request, 'app/home.html')
+
 def add_emp(request):
     form1=LoginRegister()
     form2=EmployeeForm()
     if request.method=='POST':
         form1=LoginRegister(request.POST)
-        form2=EmployeeForm(request.POST,request.FILES)
+        form2=EmployeeForm(request.POST)
+
         if form1.is_valid() and form2.is_valid():
             a=form1.save(commit=False)
-            a.is_admin=True
+            a.is_user=True
+            a.email=form1.cleaned_data['email']
             a.save()
-            c=form2.save(commit=False)
-            c.user=a
-            c.save()
-            messages.info(request,'User Registered Successfully')
+            user1=form2.save(commit=False)
+            user1.user=a
+            user1.save()
             return redirect('index')
     return render(request,'app/add_emp.html',{'form1':form1,'form2':form2})
+# def add_emp(request):
+#     form1 = LoginRegister()
+#     form2 = EmployeeForm()
+#     if request.method == 'POST':
+#         form1 = LoginRegister(request.POST)
+#         form2 = EmployeeForm(request.POST)
+#
+#         if form1.is_valid() and form2.is_valid():
+#             # Check if a Login instance with the same username already exists
+#             username = form1.cleaned_data['username']
+#             existing_login = Login.objects.filter(username=username).first()
+#             if existing_login:
+#                 # Use the existing Login instance
+#                 login_instance = existing_login
+#             else:
+#                 # Create a new Login instance
+#                 login_instance = form1.save(commit=False)
+#                 login_instance.is_user = True
+#                 login_instance.save()
+#
+#             # Create the Employee instance and associate it with the Login instance
+#             employee_instance = form2.save(commit=False)
+#             employee_instance.user = login_instance
+#             employee_instance.save()
+#
+#             return redirect('index')
+#     return render(request, 'app/add_emp.html', {'form1': form1, 'form2': form2})
+# def add_emp(request):
+#     form1 = LoginRegister()
+#     form2 = EmployeeForm()
+#     if request.method == 'POST':
+#         form1 = LoginRegister(request.POST)
+#         form2 = EmployeeForm(request.POST)
+#
+#         if form1.is_valid() and form2.is_valid():
+#             # Check if a Login instance with the same username already exists
+#             username = form1.cleaned_data.get('username')
+#             # existing_login = Login.objects.filter(username=username).first()
+#             # print(existing_login)
+#             login_instance = form1.save(commit=True)
+#             login_instance.is_user = True
+#             # login_instance.save()
+#             # if existing_login:
+#             #     # Use the existing Login instance
+#             #     login_instance = existing_login
+#             # else:
+#             #     # Create a new Login instance
+#             #     login_instance = form1.save(commit=False)
+#             #     login_instance.is_user = True
+#             #     login_instance.save()
+#
+#             # Create the Employee instance and associate it with the Login instance
+#             employee_instance = form2.save(commit=False)
+#             employee_instance.user = login_instance
+#             employee_instance.save()
+#
+#             return redirect('index')
+#         else:
+#             # Print out the errors to help with debugging
+#             print(form1.errors)
+#             print(form2.errors)
+#
+#     # Print out the existing Login instances in the database
+#     existing_logins = Login.objects.all()
+#     print(existing_logins)
+#
+#     return render(request, 'app/add_emp.html', {'form1': form1, 'form2': form2})
 
-#@login_required(login_url='/app/login/')
-def home(request):
-    return render(request, 'app/home.html')
+
+

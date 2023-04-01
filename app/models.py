@@ -12,24 +12,26 @@ sex_choice = (
 
 
 class Login(AbstractUser):
-	is_employee=models.BooleanField(default=False)
-
+	is_user=models.BooleanField(default=False,unique=False)
+	email=models.EmailField(max_length=255,unique=True)
+	USERNAME_FIELD ='email'
+	REQUIRED_FIELDS = []
+	#username = models.CharField(max_length=150, unique=False)
+	# is_manager=models.BooleanField(default=False)
 # class Login(AbstractUser):
 # 	is_admin=models.BooleanField(default=False)
 # 	is_Employee=models.BooleanField(default=False)
 
 class Employee(models.Model):
-
-	user = models.OneToOneField(Login, on_delete=models.CASCADE, related_name='employee')
+	user = models.OneToOneField(Login, on_delete=models.CASCADE, related_name='user')
 	id = models.CharField(primary_key=True, max_length=10)
-	#name=models.CharField(max_length=50,unique=True,default='')
-	email=models.EmailField(max_length=50,unique=True)
+	name=models.CharField(max_length=50)
 	contact_number = models.CharField(max_length=50)
 	date_of_birth = models.CharField(max_length=50)
 	date_of_joining = models.CharField(max_length=50)
 	department = models.CharField(max_length=50)
 	designation = models.CharField(max_length=50)
-	gender = models.CharField(max_length=50, choices=sex_choice, default='Male')
+	gender = models.CharField(max_length=50, choices=sex_choice)
 	team = models.CharField(max_length=50)
 	def __str__(self):
 		return self.name
@@ -42,6 +44,20 @@ class Employee(models.Model):
 			return img_count
 		except:
 			return 0
+# class Manager(models.Model):
+# 	user = models.ForeignKey(Login, on_delete=models.CASCADE, related_name='manager')
+# 	id = models.CharField(primary_key=True,max_length=10)
+# 	name=models.CharField(max_length=50)
+# 	email=models.EmailField(max_length=50)
+# 	contact_number = models.CharField(max_length=50)
+# 	date_of_birth = models.CharField(max_length=50)
+# 	date_of_joining = models.CharField(max_length=50)
+# 	department = models.CharField(max_length=50)
+# 	designation = models.CharField(max_length=50)
+# 	gender = models.CharField(max_length=50, choices=sex_choice, default='Male')
+# 	team = models.CharField(max_length=50)
+# 	def __str__(self):
+# 		return self.name
 
 
 class Detected_in(models.Model):

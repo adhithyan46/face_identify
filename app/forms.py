@@ -15,17 +15,27 @@ from .models import Employee, Login
 #         fields = ('id','name','password','email','contact_number','date_of_birth','date_of_joining','department','designation','gender','team')
 # #
 class LoginRegister(UserCreationForm):
-    user=forms.CharField()
-    password1=forms.CharField(label='password',widget=forms.PasswordInput)
-    #Password2=forms.CharField(label='confirm password',widget=forms.PasswordInput)
+    email = forms.CharField(max_length=30)
+    # Password1=forms.CharField(label='password',widget=forms.PasswordInput)
+    # Password2=forms.CharField(label='confirm password',widget=forms.PasswordInput)
     class Meta:
         model=Login
-        fields=('user','password1')
+        fields=('email','password1','password2')
 class EmployeeForm(forms.ModelForm):
     class Meta:
         model=Employee
         fields='__all__'
         exclude=('user',)
+
+        def __init__(self, *args, **kwargs):
+            super(EmployeeForm, self).__init__(*args, **kwargs)
+            self.fields['user'].queryset = Login.objects.filter(is_user=True).exclude(user__isnull=False)
+
+# class ManagerForm(forms.ModelForm):
+#     class Meta:
+#         model=Manager
+#         fields='__all__'
+#         exclude=('user',)
 
 # from django.contrib.auth import get_user_model
 # from django.contrib.auth.forms import UserCreationForm
