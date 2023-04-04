@@ -4,6 +4,7 @@
 <div class="col-lg-8">
     <div class="card">
         <div class="card-header"><strong>Reply to Content</strong></div>
+        <a class="btn btn-primary"  href="{% url 'Content_admin' %}" style="font-size: 20px; margin-bottom: 10px;">Go back</a>
         <div class="card-body card-block">
             <form method="post">{% csrf_token %}
                 <div class="form-group">

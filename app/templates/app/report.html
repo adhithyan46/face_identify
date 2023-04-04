@@ -55,54 +55,54 @@
   <br>
 
 <table id="myTable">
-  <thead>
-    <tr>
-      <th>Employee ID</th>
-      <th>Employee Name</th>
-      <th>Entry Time</th>
-      <th>Exit Time</th>
-      <th>Total hours</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for det1 in det_list_out %}
-      {% for det2 in det_list_in %}
-        {% if det1.emp_id_id == det2.emp_id_id %}
-          <tr>
-            <td>{{ det1.emp_id_id }}</td>
-            <td>{{det1.emp_id}}</td>
-            <td>{{ det2.entry }}</td>
-            <td>{{ det1.out }}</td>
-          </tr>
-        {% endif %}
-      {% endfor %}
-    {% endfor %}
+ 	<thead>
+			<tr>
+				<th>Employee ID</th>
+				<th>Employee Name</th>
+				<th>Entry Time</th>
+				<th>Exit Time</th>
+				<th>Total Time</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for data in attendance_data %}
+				<tr>
+					<td>{{ data.employee_id }}</td>
+					<td>{{ data.employee_name }}</td>
+					<td>{{ data.entry_time }}</td>
+					<td>{{ data.exit_time }}</td>
+					<td>{{ data.total_time }}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
   </tbody>
 </table>
+
 <div class="container" style="background-color: white; padding: 50px;">
 
 <table id="myTable">
-  <thead>
-    <tr>
-      <th>Employee ID</th>
-      <th>Employee Name</th>
-      <th>Entry Time</th>
-      <th>Exit Time</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for det1 in report_out %}
-      {% for det2 in report_in %}
-        {% if det1.emp_id_id == det2.emp_id_id %}
-          <tr>
-            <td>{{ det1.emp_id_id }}</td>
-            <td>{{det1.emp_id}}</td>
-            <td>{{ det2.entry }}</td>
-            <td>{{ det1.out }}</td>
-          </tr>
-        {% endif %}
-      {% endfor %}
-    {% endfor %}
+ 	<thead>
+			<tr>
+				<th>Employee ID</th>
+				<th>Employee Name</th>
+				<th>Entry Time</th>
+				<th>Exit Time</th>
+				<th>Total Time</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for data in report_data %}
+				<tr>
+					<td>{{ data.employee_id }}</td>
+					<td>{{ data.employee_name }}</td>
+					<td>{{ data.entry_time }}</td>
+					<td>{{ data.exit_time }}</td>
+					<td>{{ data.total_time }}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
   </tbody>
 </table>
 

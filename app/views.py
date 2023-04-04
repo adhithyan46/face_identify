@@ -338,28 +338,30 @@ def attendece_rep(request):
         det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
         report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
 
+        attendance_data=[]
+
+        for det1, det2 in zip(det_list_out, det_list_in):
+            if det1.emp_id_id == det2.emp_id_id:
+                total_time = det1.out - det2.entry
+                total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+                attendance_data.append({
+                    'employee_id': det1.emp_id_id,
+                    'employee_name': det1.emp_id,
+                    'entry_time': det2.entry,
+                    'exit_time': det1.out,
+                    'total_time': total_time_str,
+                })
+
+
+
         context = {
-            'det_list_out': det_list_out,
-            'det_list_in': det_list_in,
+            'attendance_data':attendance_data,
             'date': date_formatted,
             'report': report,
         }
 
     return render(request, 'app/attendencereport.html', context)
 
-
-"""def report(request):
-    if request.method == 'GET':
-        date_formatted = datetime.datetime.today().date()
-        date = request.GET.get('search_box', None)
-        if date is not None:
-            date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-        det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
-        det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
-        report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
-        report_in = Detected_in.objects.all()
-        report_out = Detected_out.objects.all()
-    return render(request, 'app/report.html', {'det_list_out': det_list_out,'det_list_in': det_list_in,'date': date_formatted, 'report' : report, 'report_in':report_in, 'report_out':report_out })"""
 
 
 #@login_required(login_url='/app/login/')
@@ -374,24 +376,38 @@ def reportt(request):
         report1 = report.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
         report_in = Detected_in.objects.all()
         report_out = Detected_out.objects.all()
+        attendance_data = []
+        report_data=[]
 
-        # #calculate total hours spent for each employee
-        # total_hours = {}
-        # for det_in in report_in:
-        #     emp_id = det_in.emp_id_id
-        #     if emp_id not in total_hours:
-        #         total_hours[emp_id] = 0
-        #     report_out = Detected_out.objects.filter(emp_id_id=emp_id, out__date=date_formatted).first()
-        #     if report_out:
-        #         total_hours[emp_id] += (report_out.out - det_in.entry).total_seconds() / 3600
+        for det1, det2 in zip(det_list_out, det_list_in):
+            if det1.emp_id_id == det2.emp_id_id:
+                total_time = det1.out - det2.entry
+                total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+                attendance_data.append({
+                    'employee_id': det1.emp_id_id,
+                    'employee_name': det1.emp_id,
+                    'entry_time': det2.entry,
+                    'exit_time': det1.out,
+                    'total_time': total_time_str,
+                })
+        for rep1,rep2 in zip(report_in,report_out):
+            if rep1.emp_id_id ==rep2.emp_id_id:
+                total_time= rep2.out-rep1.entry
+                total_time_str=str(datetime.timedelta(seconds=total_time.seconds))
+                report_data.append({
+                    'employee_id': rep1.emp_id_id,
+                    'employee_name': rep1.emp_id,
+                    'entry_time': rep1.entry,
+                    'exit_time': rep2.out,
+                    'total_time': total_time_str,
+
+                })
         context = {
-            'det_list_out': det_list_out,
-            'det_list_in': det_list_in,
+            'attendance_data':attendance_data,
+            'report_data':report_data,
             'date': date_formatted,
             'report1': report1,
-            'report_in':report_in,
-            'report_out':report_out,
-            #'total_hours':total_hours,
+
 
         }
 
@@ -463,7 +479,7 @@ def login_view(request):
         if user is not None:
             login(request, user)
             if user.is_user:
-                return redirect('index')
+                return redirect('home')
             elif user.is_staff:
                 return redirect('index')
             else:

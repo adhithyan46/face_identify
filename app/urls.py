@@ -21,7 +21,8 @@ urlpatterns = [
     path('report/',views.reportt,name='report'),
     path('person/',views.person,name='person'),
     path('logout_view/',views.logout_view,name='logout_view'),
-    path('login_view/',views.login_view,name='login_view')
+    path('login_view/',views.login_view,name='login_view'),
+    # path('my-pdf/', MyPDFView.as_view(), name='my_pdf'),
 
 
 

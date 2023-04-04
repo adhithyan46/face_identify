@@ -12,10 +12,10 @@ sex_choice = (
 
 
 class Login(AbstractUser):
-	is_user=models.BooleanField(default=False,unique=False)
+	is_user=models.BooleanField(default=False)
 	email=models.EmailField(max_length=255,unique=True)
 	USERNAME_FIELD ='email'
-	REQUIRED_FIELDS = []
+	REQUIRED_FIELDS = ['username']
 	#username = models.CharField(max_length=150, unique=False)
 	# is_manager=models.BooleanField(default=False)
 # class Login(AbstractUser):
