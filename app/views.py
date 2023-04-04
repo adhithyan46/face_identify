@@ -551,3 +551,16 @@ def Content_add(request):
 def Contentt(request):
     n = Content.objects.filter(user=request.user)
     return render(request, 'app/content.html', {'Content': n})
+
+def Content_admin(request):
+    n = Content.objects.all()
+    return render(request, 'admintemp/content.html', {'Content': n})
+def reply_Content(request,id):
+    content = Content.objects.get(id=id)
+    if request.method == 'POST':
+        r = request.POST.get('reply')
+        content.reply = r
+        content.save()
+        messages.info(request, 'Reply send for content')
+        return redirect('Content_admin')
+    return render(request, 'admintemp/content_reply.html ',{'content': content})

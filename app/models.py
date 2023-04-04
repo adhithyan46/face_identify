@@ -137,7 +137,7 @@ class Content(models.Model):
     user= models.ForeignKey(Login, on_delete=models.DO_NOTHING)
     subject = models.CharField(max_length=200)
     content = models.TextField()
-   # date = models.DateField()
+    # date = models.DateField()
     reply = models.TextField(null=True, blank=True)
 
 
