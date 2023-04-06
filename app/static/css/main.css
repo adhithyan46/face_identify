@@ -1,7 +1,10 @@
-body {
+/*body {
   background-image: -moz-linear-gradient(0deg, #d5e1e1 0%, #b5c8cc 100%);
   background-image: -webkit-linear-gradient(0deg, #d5e1e1 0%, #b5c8cc 100%);
   background-image: -ms-linear-gradient(0deg, #d5e1e1 0%, #b5c8cc 100%);
+}*/
+body{
+background :red;
 }
 
 textarea
@@ -22,7 +25,7 @@ textarea
 .content {
         width: 300px;
         height: 500px;
-        background-color: white;
+        background-color: blue;
 
         position:absolute; /*it can be fixed too*/
         left:0; right:0;

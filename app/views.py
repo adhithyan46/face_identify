@@ -4,6 +4,7 @@ from urllib import request
 from django.contrib.auth import authenticate, logout
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.shortcuts import redirect, render, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
@@ -438,31 +439,14 @@ def person(request):
 
         }
 
-    return render(request, 'app/report.html',
+    return render(request, 'app/personal_report.html',
                   {'det_list_out': det_list_out, 'det_list_in': det_list_in, 'date': date_formatted, 'report': report,
                    'report_in': report_in, 'report_out': report_out })
 
 
 
 
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
-# from django.shortcuts import render, redirect
 
-# def login_view(request):
-#     if request.method == 'POST':
-#         username = request.POST['username']
-#         password = request.POST['password']
-#         user = authenticate(request, username=username, password=password)
-#         if user is not None:
-#             login(request, user)
-#             request.session['user_id'] = user.id
-#             return redirect('home')
-#         else:
-#             error_msg = 'Invalid login credentials.'
-#     else:
-#         error_msg = ''
-#     return render(request, 'login.html', {'error_msg': error_msg})
 #@login_required(login_url='/app/login/')
 def logout_view(request):
     logout(request)
@@ -487,42 +471,6 @@ def login_view(request):
         else:
             messages.info(request,'Invalid Credentials')
     return render(request,'app/login.html')
-# def login_view(request):
-#     if request.method == 'POST':
-#         email = request.POST.get('email') # use 'email' instead of 'uname'
-#         password = request.POST.get('Password')
-#         try:
-#             user = Login.objects.get(email=email, is_user=True)
-#         except Login.DoesNotExist:
-#             user = None
-#         if user is not None and user.check_password(password):
-#             login(request, user)
-#             if user.is_staff:
-#                 return redirect('index')
-#             else:
-#                 return redirect('index')
-#         else:
-#             messages.info(request,'Invalid Credentials')
-#     return render(request,'app/login.html')
-
-
-# # @login_required(login_url='/app/login/')
-# def manager_add(request):
-#     form1=LoginRegister()
-#     form2=ManagerForm()
-#     if request.method=='POST':
-#         form1=LoginRegister(request.POST)
-#         form2=EmployeeForm(request.POST)
-#         if form1.is_valid() and form2.is_valid():
-#             a=form1.save(commit=False)
-#             a.is_manager=True
-#             a.save()
-#             user1=form2.save(commit=False)
-#             user1.user=a
-#             user1.save()
-#             messages.info(request,'User Registered Successfully')
-#             return redirect('index')
-#     return render(request,'app/employee_add.html',{'form1':form1,'form2':form2})
 
 # @login_required(login_url='/app/login/')
 def home(request):
@@ -580,3 +528,47 @@ def reply_Content(request,id):
         messages.info(request, 'Reply send for content')
         return redirect('Content_admin')
     return render(request, 'admintemp/content_reply.html ',{'content': content})
+
+
+
+def user_profile(request):
+    u = request.user
+    profile = Employee.objects.filter(user=u)
+    return render(request, 'app/user_profile.html', {'profile': profile})
+
+
+def personal_report(request):
+    if request.method == 'GET':
+        user = request.user
+        employee = Employee.objects.get(user=user)
+        date_formatted = datetime.datetime.today().date()
+        date = request.GET.get('search_box', None)
+        if date is not None:
+            date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+        report_in = Detected_in.objects.filter(emp_id=employee,entry__date=date_formatted).order_by('emp_id_id').reverse()
+        report_out = Detected_out.objects.filter(emp_id=employee,out__date=date_formatted).order_by('emp_id_id').reverse()
+
+        report_data = []
+        for rep1,rep2 in zip(report_in,report_out):
+            if rep1.emp_id_id==rep2.emp_id_id:
+                total_time = rep2.out - rep1.entry
+                total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+                report_data.append({
+                    # 'employee_id': user.id,
+                    # 'employee_name': user.name,
+                    'entry_time': rep1.entry,
+                    'exit_time': rep2.out,
+                    'total_time': total_time_str,
+                })
+        print(user)
+        context = {
+            'report_data':report_data,
+            # 'date': date_formatted,
+        }
+        return render(request, 'admintemp/personal_report.html', context)
+
+
+
+
+
+

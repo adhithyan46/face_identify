@@ -22,8 +22,7 @@ urlpatterns = [
     path('person/',views.person,name='person'),
     path('logout_view/',views.logout_view,name='logout_view'),
     path('login_view/',views.login_view,name='login_view'),
-    # path('my-pdf/', MyPDFView.as_view(), name='my_pdf'),
-
-
+    path('user_profile/', views.user_profile, name='user_profile'),
+    path('personal_report/', views.personal_report, name='personal_report'),
 
 ]

@@ -11,7 +11,45 @@
 	<!----------------CSS--------------->
 	<link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
 	<link rel="stylesheet" href="{% static 'css/main.css' %}">
-	{% block css %}{% endblock %}
+	{% block css %}
+		<style>
+			body {
+				background-color: red;
+				font-family: 'Poppins', sans-serif;
+			}
+			.navbar {
+				background-color: #006699;
+				border-bottom: 4px solid #004466;
+			}
+			.navbar-brand {
+				color: #ffffff;
+				font-weight: 600;
+				font-size: 2rem;
+				letter-spacing: 2px;
+			}
+			.btn-primary {
+				background-color: #006699;
+				border-color: #006699;
+				font-size: 1rem;
+				font-weight: 600;
+				letter-spacing: 2px;
+				padding: 10px 20px;
+			}
+			.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+				background-color: #005580;
+				border-color: #005580;
+			}
+			.text-primary {
+				color: #006699;
+			}
+			h1, h2, h3, h4, h5, h6 {
+				font-family: 'Roboto', sans-serif;
+			}
+			.container {
+				margin-top: 50px;
+			}
+		</style>
+	{% endblock %}
 </head>
 
 

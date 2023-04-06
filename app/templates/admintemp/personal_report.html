@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block css %}
+<style>
+
+    #myInput {
+      background-image: url('/static/css/searchicon.png');
+      background-position: 10px 10px;
+      background-repeat: no-repeat;
+      width: 100%;
+      font-size: 16px;
+      padding: 12px 20px 12px 40px;
+      border: 1px solid #ddd;
+      margin-bottom: 12px;
+    }
+
+    #myTable {
+      border-collapse: collapse;
+      width: 100%;
+      border: 1px solid #ddd;
+      font-size: 18px;
+    }
+
+    #myTable th, #myTable td {
+      text-align: left;
+      padding: 12px;
+    }
+
+    #myTable tr {
+      border-bottom: 1px solid #ddd;
+    }
+
+    #myTable tr.header, #myTable tr:hover {
+      background-color: #f1f1f1;
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+
+<div class="container" style="background-color: white; padding: 50px;">
+	<a class="btn btn-primary"  href="{% url 'home' %}" style="font-size: 20px; margin-bottom: 10px;">home</a>
+<form method="get" action="." style="margin: 0">
+    Enter Date: <input id="search_submit" type="date" name="search_box">
+    <button id="search_submit" type="submit">Submit</button>
+</form>
+<br>
+
+<strong>Date: {{ date|date:"D, d M, Y" }}</strong>
+
+  <br>
+
+<table id="myTable">
+ 	<thead>
+			<tr>
+<!--				<th>Employee ID</th>-->
+<!--				<th>Employee Name</th>-->
+				<th>Entry Time</th>
+				<th>Exit Time</th>
+				<th>Total Time</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for data in report_data %}
+				<tr>
+<!--					<td>{{ data.employee_id }}</td>-->
+<!--					<td>{{ data.employee_name }}</td>-->
+					<td>{{ data.entry_time }}</td>
+					<td>{{ data.exit_time }}</td>
+					<td>{{ data.total_time }}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+  </tbody>
+</table>
+
+<div class="container" style="background-color: white; padding: 50px;">
+
+
+
+<script>
+    function myFunction() {
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("myInput");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("myTable");
+  tr = table.getElementsByTagName("tr");
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[0];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+}
+</script>
+{% endblock %}
