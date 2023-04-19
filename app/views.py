@@ -567,8 +567,51 @@ def personal_report(request):
         }
         return render(request, 'admintemp/personal_report.html', context)
 
+# from django.http import HttpResponse
+# from django.template.loader import render_to_string
+# import pdfkit
+#
+# def save_pdf(request):
+#     # Generate HTML content using a template
+#     html = render_to_string('content.html', {'data': 'my dynamic content'})
+#
+#     # Generate PDF using django-pdfkit
+#     pdf = pdfkit.from_string(html, False)
+#
+#     # Create HTTP response with PDF attachment
+#     response = HttpResponse(pdf, content_type='application/pdf')
+#     response['Content-Disposition'] = 'attachment; filename="content.pdf"'
+#
+#     return response
+
+#
+# from django.views.generic import TemplateView
+# from django_wkhtmltopdf.views import PDFTemplateView
+#
+# class MyPDFView(PDFTemplateView):
+#     template_name = 'my_template.html'
+#     filename = 'my_pdf.pdf'
+#     cmd_options = {
+#         'margin-top': 20,
+#         'margin-right': 20,
+#         'margin-bottom': 20,
+#         'margin-left': 20,
+#         'orientation': 'Landscape',
+#     }
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         # Add context data here
+#         context['data'] = 'my dynamic content'
+#         return context
 
 
+# from django.http import HttpResponse
+# from django_weasyprint import WeasyTemplateResponse
 
-
+# def my_pdf_view(request):
+#     context = {'data': 'my dynamic content'}
+#     response = WeasyTemplateResponse('my_template.html', context)
+#     response['Content-Disposition'] = 'attachment; filename="my_pdf.pdf"'
+#     return response
 

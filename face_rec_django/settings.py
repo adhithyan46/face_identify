@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_forms',
+    'crispy_forms' ,
 
 ]
 
@@ -122,6 +122,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
+# PDFKIT_CONFIG = {
+#     'WKHTMLTOPDF_PATH': 'c:/users/sreehari cr/appdata/roaming/python/python39/site-packages',
+#     'USE_CELERY': False,
+# }
 
 STATIC_URL = '/static/'
 
