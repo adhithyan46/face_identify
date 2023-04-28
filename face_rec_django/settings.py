@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_forms'
-
+    'crispy_forms',
+    'crispy_bootstrap5',
 ]
 
 MIDDLEWARE = [
@@ -114,8 +114,8 @@ TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 
 USE_L10N = True
-
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
 AUTH_USER_MODEL='app.Login'
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
