@@ -43,9 +43,14 @@
 
 <div class="container" style="background-color: white; padding: 50px;">
 
+
 <form method="get" action="." style="margin: 0">
     Enter Date: <input id="search_submit" type="date" name="search_box">
     <button id="search_submit" type="submit">Submit</button>
+	<a href="{% url 'report_pdf' %}">Generate PDF</a>
+
+
+
 </form>
 <br>
 

@@ -10,6 +10,7 @@
     <div class="card">
         <div class="card-header">
             <i class="fa fa-user"></i><strong class="card-title pl-2">My Profile </strong>
+            <a href="{% url 'generate_pdf' %}">Download PDF</a>
         </div>
 
         {% for u in profile %}

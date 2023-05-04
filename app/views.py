@@ -1,18 +1,24 @@
 import math
 from urllib import request
 
+import numpy
 from django.contrib.auth import authenticate, logout
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import redirect, render
 from django.http import HttpResponseRedirect, HttpResponse
+from django.template.loader import get_template, render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Q
+from django.views import View
+# from reportlab.pdfgen import canvas
+# from weasyprint import HTML
+from django.shortcuts import get_object_or_404
 
 
-#import accounts
+# import accounts
 from face_rec_django.settings import LOGIN_REDIRECT_URL
 from .facerec.faster_video_stream import stream
 from .facerec.click_photos import click
@@ -27,9 +33,6 @@ from cachetools import TTLCache
 from django.contrib import messages
 from django.http import FileResponse
 import io
-#from reportlab.pdfgen import canvas
-#from reportlab.lib.units import inch
-#from reportlab.lib.pagesizes import letter
 
 
 cache = TTLCache(maxsize=20, ttl=60)
@@ -157,8 +160,8 @@ def identify_faces(video_capture1, video_capture2):
 
 
         # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
-        rgb_frame = small_frame[:, :, ::-1]
-        rgb_frame1 = small_frame1[:, :, ::-1]
+        rgb_frame = numpy.ascontiguousarray(small_frame[:, :, ::-1])
+        rgb_frame1 = numpy.ascontiguousarray(small_frame1[:, :, ::-1])
 
         if process_this_frame:
             predictions = predict(rgb_frame, model_path="app/facerec/models/trained_model.clf")
@@ -415,7 +418,26 @@ def reportt(request):
     return render(request, 'app/report.html', context)
 
 
-
+# from django.http import HttpResponse
+# import csv
+#
+#
+# def export_to_csv(request):
+#     # your code to retrieve data here
+#
+#     # create the response object with the appropriate headers
+#     response = HttpResponse(content_type='text/csv')
+#     response['Content-Disposition'] = 'attachment; filename="attendance_data.csv"'
+#
+#     # write the data to the response object using the csv.writer object
+#     writer = csv.writer(response)
+#     writer.writerow(['Employee ID', 'Employee Name', 'Entry Time', 'Exit Time', 'Total Time'])
+#     for data in attendance_data:
+#         writer.writerow(
+#             [data['employee_id'], data['employee_name'], data['entry_time'], data['exit_time'], data['total_time']])
+#
+#     # return the response object
+#     return response
 
 
 #@login_required(login_url='/app/login/')
@@ -568,50 +590,204 @@ def personal_report(request):
         return render(request, 'admintemp/personal_report.html', context)
 
 # from django.http import HttpResponse
+# from reportlab.pdfgen import canvas
 # from django.template.loader import render_to_string
-# import pdfkit
-#
-# def save_pdf(request):
-#     # Generate HTML content using a template
-#     html = render_to_string('content.html', {'data': 'my dynamic content'})
-#
-#     # Generate PDF using django-pdfkit
-#     pdf = pdfkit.from_string(html, False)
-#
-#     # Create HTTP response with PDF attachment
-#     response = HttpResponse(pdf, content_type='application/pdf')
-#     response['Content-Disposition'] = 'attachment; filename="content.pdf"'
-#
+# from io import BytesIO
+# from django.http import HttpResponse
+# from django.template.loader import get_template
+from xhtml2pdf import pisa
+
+def generate_pdf3(request):
+    template = get_template('admintemp/content.html')
+    context = {'Content': Content.objects.all()}  # Pass the Content data to the template context
+    html = template.render(context)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="my_pdf.pdf"'
+    pdf = pisa.CreatePDF(html, dest=response)
+    if pdf.err:
+        return HttpResponse('PDF generation error: %s' % pdf.err)
+    pdf.dest.close()
+    return response
+
+# def generate_pdf4(request):
+#     template = get_template('admintemp/personal_report.html')
+#     context = {'personal_report': personal_report.objects.all()}  # Pass the Content data to the template context
+#     html = template.render(context)
+#     response = HttpResponse(content_type='application/pdf')
+#     response['Content-Disposition'] = 'attachment; filename="my_pdf.pdf"'
+#     pdf = pisa.CreatePDF(html, dest=response)
+#     if pdf.err:
+#         return HttpResponse('PDF generation error: %s' % pdf.err)
+#     pdf.dest.close()
 #     return response
 
-#
-# from django.views.generic import TemplateView
-# from django_wkhtmltopdf.views import PDFTemplateView
-#
-# class MyPDFView(PDFTemplateView):
-#     template_name = 'my_template.html'
-#     filename = 'my_pdf.pdf'
-#     cmd_options = {
-#         'margin-top': 20,
-#         'margin-right': 20,
-#         'margin-bottom': 20,
-#         'margin-left': 20,
-#         'orientation': 'Landscape',
-#     }
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         # Add context data here
-#         context['data'] = 'my dynamic content'
-#         return context
 
+def generate_pdf4(request):
+    # get the template
+    template = get_template('admintemp/personal_report.html')
+
+    # get the context data
+    user = request.user
+    employee = Employee.objects.get(user=user)
+    date_formatted = datetime.datetime.today().date()
+    date = request.GET.get('search_box', None)
+    if date is not None:
+        date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+    report_in = Detected_in.objects.filter(emp_id=employee,entry__date=date_formatted).order_by('emp_id_id').reverse()
+    report_out = Detected_out.objects.filter(emp_id=employee,out__date=date_formatted).order_by('emp_id_id').reverse()
+
+    report_data = []
+    for rep1,rep2 in zip(report_in,report_out):
+        if rep1.emp_id_id==rep2.emp_id_id:
+            total_time = rep2.out - rep1.entry
+            total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+            report_data.append({
+                # 'employee_id': user.id,
+                # 'employee_name': user.name,
+                'entry_time': rep1.entry,
+                'exit_time': rep2.out,
+                'total_time': total_time_str,
+            })
+
+    context = {
+        'report_data':report_data,
+        # 'date': date_formatted,
+    }
+
+    # render the template with the context data
+    html = template.render(context)
+
+    # create a PDF object
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'filename="personal_report.pdf"'
+
+    # create the PDF
+    pisa_status = pisa.CreatePDF(
+        html, dest=response)
+
+    # return the PDF object
+    if pisa_status.err:
+        return HttpResponse('Failed to generate PDF')
+    return response
 
 # from django.http import HttpResponse
-# from django_weasyprint import WeasyTemplateResponse
+# from django.template.loader import get_template
+# from django.template import Context
+# from xhtml2pdf import pisa
 
-# def my_pdf_view(request):
-#     context = {'data': 'my dynamic content'}
-#     response = WeasyTemplateResponse('my_template.html', context)
-#     response['Content-Disposition'] = 'attachment; filename="my_pdf.pdf"'
-#     return response
+def attendance_pdf(request):
+    # get the attendance data from the database
+    date_formatted = datetime.datetime.today().date()
+    date = request.GET.get('search_box', None)
+    if date is not None:
+        date_formatted = datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").date()
 
+    det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
+    det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+
+    attendance_data=[]
+
+    for det1, det2 in zip(det_list_out, det_list_in):
+        if det1.emp_id_id == det2.emp_id_id:
+            total_time = det1.out - det2.entry
+            total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+            attendance_data.append({
+                'employee_id': det1.emp_id_id,
+                'employee_name': det1.emp_id,
+                'entry_time': det2.entry,
+                'exit_time': det1.out,
+                'total_time': total_time_str,
+            })
+
+    # get the template
+    template = get_template('app/attendencereport.html')
+    # render the template with the attendance data
+    html = template.render({'attendance_data':attendance_data, 'date': date_formatted})
+    # create a PDF object
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
+
+    # create a PDF
+    pisa.CreatePDF(html, dest=response)
+    print(attendance_data)
+
+    # return the PDF
+    return response
+
+
+
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+import io
+
+def generate_pdf(request):
+    u = request.user
+    profile = Employee.objects.filter(user=u)
+    context = {'profile': profile}
+    html = render_to_string('app/user_profile.html', context)
+    pdf_file = io.BytesIO()
+
+    # generate PDF
+    pisa.CreatePDF(html.encode('UTF-8'), dest=pdf_file)
+
+    # set response headers
+    pdf_file.seek(0)
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="user_profile.pdf"'
+    return response
+
+def report_pdf(request):
+    # get the attendance data from the database
+    date_formatted = datetime.datetime.today().date()
+    date = request.GET.get('search_box', None)
+    if date is not None:
+        date_formatted = datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").date()
+
+    det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
+    det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+    report1 = report.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+    report_in = Detected_in.objects.all()
+    report_out = Detected_out.objects.all()
+    attendance_data=[]
+    report_data=[]
+
+    for det1, det2 in zip(det_list_out, det_list_in):
+        if det1.emp_id_id == det2.emp_id_id:
+            total_time = det1.out - det2.entry
+            total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+            attendance_data.append({
+                'employee_id': det1.emp_id_id,
+                'employee_name': det1.emp_id,
+                'entry_time': det2.entry,
+                'exit_time': det1.out,
+                'total_time': total_time_str,
+            })
+    for rep1, rep2 in zip(report_in, report_out):
+        if rep1.emp_id_id == rep2.emp_id_id:
+            total_time = rep2.out - rep1.entry
+            total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+            report_data.append({
+                'employee_id': rep1.emp_id_id,
+                'employee_name': rep1.emp_id,
+                'entry_time': rep1.entry,
+                'exit_time': rep2.out,
+                'total_time': total_time_str,
+
+            })
+
+
+    # get the template
+    template = get_template('app/report.html')
+    # render the template with the attendance data
+    html = template.render({'attendance_data':attendance_data,'report_data':report_data, 'date': date_formatted})
+    # create a PDF object
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="report.pdf"'
+
+    # create a PDF
+    pisa.CreatePDF(html, dest=response)
+
+
+    # return the PDF
+    return response

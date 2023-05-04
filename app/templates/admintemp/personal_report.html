@@ -40,8 +40,8 @@
 
 {% block content %}
 
-
 <div class="container" style="background-color: white; padding: 50px;">
+	<a href="{% url 'generate_pdf4' %}">Generate PDF</a>
 	<a class="btn btn-primary"  href="{% url 'home' %}" style="font-size: 20px; margin-bottom: 10px;">home</a>
 <form method="get" action="." style="margin: 0">
     Enter Date: <input id="search_submit" type="date" name="search_box">
