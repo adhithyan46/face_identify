@@ -37,50 +37,51 @@
 </style>
 
 {% endblock %}
-
 {% block content %}
-
-
 <div class="container" style="background-color: white; padding: 50px;">
-		<a href="{% url 'attendance_pdf' %}">Generate PDF</a>
+  <form method="get" action="." style="margin: 0">
+    <label for="start_date">Start Date:</label>
+    <input type="date" id="start_date" name="start_date" value="{{ start_date|default:'' }}">
+    <label for="end_date">End Date:</label>
+    <input type="date" id="end_date" name="end_date" value="{{ end_date|default:'' }}">
+    <button type="submit">Submit</button>
+  </form>
+  <br>
 
-
-<form method="get" action="." style="margin: 0">
-    Enter Date: <input id="search_submit" type="date" name="search_box">
-    <button id="search_submit" type="submit">Submit</button>
-</form>
-<br>
-
-<strong>Date: {{ date|date:"D, d M, Y" }}</strong>
+  {% if start_date and end_date %}
+    <strong>Date: {{ start_date|date:"D, d M, Y" }} - {{ end_date|date:"D, d M, Y" }}</strong>
+  {% endif %}
 
   <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for name.." style="float: right; padding: 10px;">
   <br>
 
   <table id="myTable">
- 	  <thead>
-			  <tr>
-				  <th>Employee ID</th>
-				  <th>Employee Name</th>
-				  <th>Entry Time</th>
-				  <th>Exit Time</th>
-				  <th>Total Time</th>
-			  </tr>
-		  </thead>
-		  <tbody>
-			  {% for data in attendance_data %}
-				  <tr>
-					  <td>{{ data.employee_id }}</td>
-					  <td>{{ data.employee_name }}</td>
-					  <td>{{ data.entry_time }}</td>
-					  <td>{{ data.exit_time }}</td>
-					  <td>{{ data.total_time }}</td>
-				  </tr>
-			  {% endfor %}
-		  </tbody>
-	  </table>
+    <thead>
+      <tr>
+        <th>Employee ID</th>
+        <th>Employee Name</th>
+        <th>Entry Time</th>
+        <th>Exit Time</th>
+        <th>Total Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for data in attendance_data %}
+      <tr>
+        <td>{{ data.employee_id }}</td>
+        <td>{{ data.employee_name }}</td>
+        <td>{{ data.entry_time }}</td>
+        <td>{{ data.exit_time }}</td>
+        <td>{{ data.total_time }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5">No attendance data available for the selected date range.</td>
+      </tr>
+      {% endfor %}
     </tbody>
   </table>
-
+</div>
 
 <script>
     function myFunction() {

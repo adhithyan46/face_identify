@@ -19,6 +19,7 @@ urlpatterns = [
     path('identify/', views.identify, name='identify'),
     path('add_emp/', views.add_emp, name='add_emp'),
     path('attendece_rep/', views.attendece_rep, name='attendece_rep'),
+    path('attendece_rep2/', views.attendece_rep2, name='attendece_rep2'),
     path('report/',views.reportt,name='report'),
     path('person/',views.person,name='person'),
     path('logout_view/',views.logout_view,name='logout_view'),

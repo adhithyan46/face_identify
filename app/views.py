@@ -287,44 +287,13 @@ def detected_out(request):
 
 	# det_list = Detected.objects.all().order_by('time_stamp').reverse()
 	return render(request, 'app/detectedout.html', {'det_list': det_list, 'date': date_formatted})
-#@login_required(login_url='/accounts/login/')
+#@login_required(login_url='/app/login/')
 def identify(request):
     video_capture1 = cv2.VideoCapture(0)
     video_capture2 = cv2.VideoCapture(1)
     identify_faces(video_capture1, video_capture2)
     return HttpResponseRedirect(reverse('index'))
 
-#@login_required(login_url='/accounts/login/')
-# def add_emp(request):
-#     if request.method == "POST":
-#         form = EmployeeForm(request.POST)
-#         if form.is_valid():
-#             emp = form.save()
-#             # post.author = request.user
-#             # post.published_date = timezone.now()
-#             # post.save()
-#             return HttpResponseRedirect(reverse('index'))
-#     else:
-#         form = EmployeeForm()
-#     return render(request, 'app/add_emp.html', {'form': form})
-
-
-
-#@login_required(login_url='/app/registration/login/')
-# def logout(request):
-#     logout(request)
-#     return redirect('LoginPage')
-# def report(request):
-#     if request.method == 'GET':
-#         date_formatted = datetime.datetime.today().date()
-#         date = request.GET.get('search_box', None)
-#         if date is not None:
-#             date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-#         det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
-#         det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
-#         report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
-#         report_in = Detected_in.objects.all()
-#         report_out = Detected_out.objects.all()
 
 #@login_required(login_url='/app/login/')
 def admin(request):
@@ -418,26 +387,49 @@ def reportt(request):
     return render(request, 'app/report.html', context)
 
 
-# from django.http import HttpResponse
-# import csv
-#
-#
-# def export_to_csv(request):
-#     # your code to retrieve data here
-#
-#     # create the response object with the appropriate headers
-#     response = HttpResponse(content_type='text/csv')
-#     response['Content-Disposition'] = 'attachment; filename="attendance_data.csv"'
-#
-#     # write the data to the response object using the csv.writer object
-#     writer = csv.writer(response)
-#     writer.writerow(['Employee ID', 'Employee Name', 'Entry Time', 'Exit Time', 'Total Time'])
-#     for data in attendance_data:
-#         writer.writerow(
-#             [data['employee_id'], data['employee_name'], data['entry_time'], data['exit_time'], data['total_time']])
-#
-#     # return the response object
-#     return response
+def attendece_rep2(request):
+    if request.method == 'GET':
+        start_date = request.GET.get('start_date', None)
+        end_date = request.GET.get('end_date', None)
+
+        if not start_date and not end_date:
+            # If no dates were provided, default to today's date
+            date_formatted = datetime.datetime.today().date()
+            start_date_formatted = date_formatted
+            end_date_formatted = date_formatted
+
+        else:
+            start_date_formatted = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_date_formatted = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+
+        det_list_out = Detected_out.objects.filter(out__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
+        det_list_in = Detected_in.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
+        report = Rep.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
+
+        attendance_data=[]
+
+        for det1, det2 in zip(det_list_out, det_list_in):
+            if det1.emp_id_id == det2.emp_id_id:
+                total_time = det1.out - det2.entry
+                total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+                attendance_data.append({
+                    'employee_id': det1.emp_id_id,
+                    'employee_name': det1.emp_id,
+                    'entry_time': det2.entry,
+                    'exit_time': det1.out,
+                    'total_time': total_time_str,
+                })
+
+        context = {
+            'attendance_data':attendance_data,
+            'start_date': start_date_formatted,
+            'end_date': end_date_formatted,
+            'report': report,
+        }
+
+    return render(request, 'app/attendece_rep2.html', context)
+
+
 
 
 #@login_required(login_url='/app/login/')
@@ -791,3 +783,33 @@ def report_pdf(request):
 
     # return the PDF
     return response
+
+def attendance_by_name(request):
+    if request.method == 'GET':
+        employee_name = request.GET.get('search_box', None)
+
+        det_list_out = Detected_out.objects.filter(emp_id__icontains=employee_name).order_by('emp_id_id').reverse()
+        det_list_in = Detected_in.objects.filter(emp_id__icontains=employee_name).order_by('emp_id_id').reverse()
+        report = Rep.objects.filter(emp_id__icontains=employee_name).order_by('emp_id_id').reverse()
+
+        attendance_data=[]
+
+        for det1, det2 in zip(det_list_out, det_list_in):
+            if det1.emp_id_id == det2.emp_id_id:
+                total_time = det1.out - det2.entry
+                total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+                attendance_data.append({
+                    'employee_id': det1.emp_id_id,
+                    'employee_name': det1.emp_id,
+                    'entry_time': det2.entry,
+                    'exit_time': det1.out,
+                    'total_time': total_time_str,
+                })
+
+        context = {
+            'attendance_data':attendance_data,
+            'employee_name': employee_name,
+            'report': report,
+        }
+
+    return render(request, 'app/report_name.html', context)
