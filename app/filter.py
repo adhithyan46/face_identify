@@ -6,9 +6,9 @@ from app.models import Employee
 
 
 class EmployeeFilter(django_filters.FilterSet):
-    id = CharFilter(field_name='id', label="", lookup_expr='icontains', widget=forms.TextInput(attrs={
+    name = CharFilter(field_name='name', label="", lookup_expr='icontains', widget=forms.TextInput(attrs={
                   'placeholder': 'Search Name', 'class': 'form-control'}))
 
     class Meta:
         model = Employee
-        fields = ('id',)
+        fields = ('name',)

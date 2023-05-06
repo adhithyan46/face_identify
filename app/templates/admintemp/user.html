@@ -9,6 +9,7 @@
     {% endfor %}
     <div class="card">
         <div class="card-header">
+            <a class="btn btn-primary"  href="{% url 'index' %}" style="font-size: 20px; margin-bottom: 10px;">home</a>
             <strong class="card-title">Employees</strong>
         </div>
         <br>
@@ -17,8 +18,8 @@
             <div class="col-lg-6">
                 <form method="get" class="form-inline " style="float:right;">
                     <div class="md-form my-0">
-                        {{EmployeeFilter.form }}
-<!--                        <button class="btn btn-primary mr-2" type="submit">Search</button>-->
+                        {{userFilter.form }}
+                        <button class="btn btn-primary mr-2" type="submit">Search</button>
                     </div>
                 </form>
             </div>

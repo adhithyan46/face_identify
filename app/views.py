@@ -551,39 +551,7 @@ def user_profile(request):
     profile = Employee.objects.filter(user=u)
     return render(request, 'app/user_profile.html', {'profile': profile})
 
-# from django.shortcuts import render
-# from .models import Employee
-# from .forms import EmployeeForm
-#
-# def employee_details(request):
-#     form = EmployeeForm(request.GET)
-#     if form.is_valid():
-#         name = form.cleaned_data['name']
-#         employees = Employee.objects.filter(name__icontains=name)
-#         return render(request, 'employee_search_results.html', {'employees': employees})
-#     else:
-#         form = EmployeeForm()
-#     return render(request, 'employee_search.html', {'form': form})
 
-# from django.shortcuts import render, get_object_or_404
-# from .models import Employee
-#
-# from django.shortcuts import render
-# from .models import Employee
-# from .forms import EmployeeForm
-#
-# def employee_details(request):
-#     if request.method == 'POST':
-#         form = EmployeeForm(request.POST)
-#         if form.is_valid():
-#             employee_id = form.cleaned_data['id']
-#             employee = Employee.objects.get(id=employee_id)
-#             context = {'employee': employee}
-#             return render(request, 'employee_details.html', context)
-#     else:
-#         form = EmployeeForm()
-#     context = {'form': form}
-#     return render(request, 'admintemp/user_profile.html', context)
 
 def personal_report(request):
     if request.method == 'GET':
@@ -866,7 +834,7 @@ def employee_update(request, id):
         form = EmployeeForm(request.POST or None, instance=n)
         if form.is_valid():
             form.save()
-            return redirect('user_view')
+            return redirect('employee_view')
     else:
         form = EmployeeForm(instance=n)
     return render(request, 'admintemp/user_update.html', {'form': form})
