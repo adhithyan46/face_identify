@@ -1,0 +1,28 @@
+<!-- attendance_list.html -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Attendance List</h1>
+<form method="GET">
+    <label for="date">Search by date:</label>
+    <input type="date" name="date" id="date" value="{{ request.GET.date }}">
+    <input type="submit" value="Search">
+</form>
+<table>
+    <thead>
+        <tr>
+            <th>Employee Name</th>
+            <th>Present</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for attendance in attendance_list %}
+        <tr>
+            <td>{{ attendance.employee.name }}</td>
+            <td>{% if attendance.present %}Yes{% else %}No{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

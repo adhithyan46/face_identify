@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="col-lg-10">
+
+<div>
     {% for message in messages %}
     <div class="alert alert-primary" role="alert">
         {{message}}
@@ -14,7 +15,7 @@
         </div>
         <br>
         <div class="row">
-            <div class="col-lg-6 "></div>
+
             <div class="col-lg-6">
                 <form method="get" class="form-inline " style="float:right;">
                     <div class="md-form my-0">
@@ -25,7 +26,7 @@
             </div>
         </div>
         <br>
-        <div class="card-body">
+        <div class="card-body" >
             <table class="table table-striped">
                 <thead>
                 <tr>

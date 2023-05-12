@@ -42,20 +42,22 @@ class ContentForm(forms.ModelForm):
         model = Content
         fields = ('subject', 'content')
 
-    # def clean_date(self):
-    #     date = self.cleaned_data['date']
-    #
-    #     if date != datetime.date.today():
-    #         raise forms.ValidationError("Invalid Date")
-    #     return date
+
+from django.db import models
+from django.forms import fields
+from .models import UploadImage
+from django import forms
+
+
+class UserImage(forms.ModelForm):
+    class meta:
+        # To specify the model to be used to create form
+        models = UploadImage
+        # It includes all the fields of model
+        fields = '__all__'
 
 
 
 
-# class ManagerForm(forms.ModelForm):
-#     class Meta:
-#         model=Manager
-#         fields='__all__'
-#         exclude=('user',)
 
 

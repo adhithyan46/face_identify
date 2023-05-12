@@ -24,8 +24,8 @@ from .facerec.faster_video_stream import stream
 from .facerec.click_photos import click
 from .facerec.train_faces import trainer
 from .filter import EmployeeFilter
-from .models import Detected_out, Employee, Detected_in, Rep, report, Login, Content
-from .forms import EmployeeForm, LoginRegister, ContentForm
+from .models import Detected_out, Employee, Detected_in, Rep, report, Login, Content, Attendance
+from .forms import EmployeeForm, LoginRegister, ContentForm, UserImage
 import cv2
 import pickle
 import face_recognition
@@ -195,6 +195,8 @@ def identify_faces(video_capture1, video_capture2):
             
 
             face_names.append(name)
+            employee=Employee.objects.get(name=name)
+            Attendance.objects.create(employee=employee,date=datetime.date.today(),present=True)
            
             
         for name1, (top, right, bottom, left) in predictions1:
@@ -257,7 +259,7 @@ def add_photos(request):
 #@login_required(login_url='/app/login/')
 def click_photos(request, emp_id):
 	cam = cv2.VideoCapture(0)
-	emp = get_object_or_404(Employee, id=emp_id)
+	emp = get_object_or_404(Employee,id=emp_id)
 	click(emp.name, emp.id, cam)
 	return HttpResponseRedirect(reverse('add_photos'))
 
@@ -603,19 +605,6 @@ def generate_pdf3(request):
     pdf.dest.close()
     return response
 
-# def generate_pdf4(request):
-#     template = get_template('admintemp/personal_report.html')
-#     context = {'personal_report': personal_report.objects.all()}  # Pass the Content data to the template context
-#     html = template.render(context)
-#     response = HttpResponse(content_type='application/pdf')
-#     response['Content-Disposition'] = 'attachment; filename="my_pdf.pdf"'
-#     pdf = pisa.CreatePDF(html, dest=response)
-#     if pdf.err:
-#         return HttpResponse('PDF generation error: %s' % pdf.err)
-#     pdf.dest.close()
-#     return response
-
-
 def generate_pdf4(request):
     # get the template
     template = get_template('admintemp/personal_report.html')
@@ -664,10 +653,7 @@ def generate_pdf4(request):
         return HttpResponse('Failed to generate PDF')
     return response
 
-# from django.http import HttpResponse
-# from django.template.loader import get_template
-# from django.template import Context
-# from xhtml2pdf import pisa
+
 
 def attendance_pdf(request):
     # get the attendance data from the database
@@ -845,3 +831,56 @@ def employee_delete(request, id):
         return redirect('employee_view')
     else:
         return redirect('employee_view')
+
+from django.shortcuts import render
+from .models import Attendance, Employee
+
+
+
+from django.shortcuts import render
+from .models import Employee, Attendance
+def attendance_list(request):
+    # Check if the user submitted a search query
+    date = request.GET.get('date', None)
+    attendance_list = []
+
+    # If a date was provided, filter the attendance records by that date
+    if date:
+        # Convert the date string to a datetime object
+        datetime_object =datetime.datetime.strptime(date, '%Y-%m-%d')
+        # Get all employees
+        employees = Employee.objects.all()
+        # Iterate over each employee and get their attendance record for the specified date
+        for employee in employees:
+                attendance = Attendance.objects.filter(employee=employee, date=datetime_object)
+                if attendance.exists():
+                    attendance_list.append({'employee': employee, 'present': True})
+                else:
+                    attendance_list.append({'employee': employee, 'present': False})
+    else:
+        # If no date was provided, just get all attendance records
+        attendance_records = Attendance.objects.all()
+        for attendance in attendance_records:
+            attendance_list.append({'employee': attendance.employee, 'present': attendance.present})
+            return render(request, 'admintemp/attendance.html', {'attendance_list': attendance_list})
+    return render(request, 'admintemp/attendance.html', {'attendance_list': attendance_list})
+
+
+from .models import UploadImage
+
+
+def image_request(request,emp_id):
+    if request.method == 'POST':
+        form = UserImage(request.POST, request.FILES)
+        if form.is_valid():
+            form.instance.employee_id = emp_id
+            form.save()
+
+            # Getting the current instance object to display in the template
+            img_object = form.instance
+
+            return render(request, 'image_form.html', {'form': form, 'img_obj': img_object})
+    else:
+        form = UserImage()
+
+    return render(request, 'image_form.html', {'form': form})
