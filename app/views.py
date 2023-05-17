@@ -19,13 +19,13 @@ from django.shortcuts import get_object_or_404
 
 
 # import accounts
-from face_rec_django.settings import LOGIN_REDIRECT_URL
+from face_rec_django.settings import LOGIN_REDIRECT_URL, MEDIA_ROOT, BASE_DIR
 from .facerec.faster_video_stream import stream
 from .facerec.click_photos import click
 from .facerec.train_faces import trainer
 from .filter import EmployeeFilter
 from .models import Detected_out, Employee, Detected_in, Rep, report, Login, Content, Attendance
-from .forms import EmployeeForm, LoginRegister, ContentForm, UserImage
+from .forms import EmployeeForm, LoginRegister, ContentForm
 import cv2
 import pickle
 import face_recognition
@@ -34,7 +34,7 @@ from cachetools import TTLCache
 from django.contrib import messages
 from django.http import FileResponse
 import io
-
+import os
 
 cache = TTLCache(maxsize=20, ttl=60)
 cache1 = TTLCache(maxsize=20, ttl=60)
@@ -251,17 +251,6 @@ def video_stream(request):
     stream()
     return HttpResponseRedirect(reverse('index'))
 
-#@login_required(login_url='/app/login/')
-def add_photos(request):
-	emp_list = Employee.objects.all()
-	return render(request, 'app/add_photos.html', {'emp_list': emp_list})
-
-#@login_required(login_url='/app/login/')
-def click_photos(request, emp_id):
-	cam = cv2.VideoCapture(0)
-	emp = get_object_or_404(Employee,id=emp_id)
-	click(emp.name, emp.id, cam)
-	return HttpResponseRedirect(reverse('add_photos'))
 
 #@login_required(login_url='/accounts/login/')
 def train_model(request):
@@ -866,21 +855,67 @@ def attendance_list(request):
     return render(request, 'admintemp/attendance.html', {'attendance_list': attendance_list})
 
 
-from .models import UploadImage
+def upload_photos(request,id):
+    emp=get_object_or_404(Employee,id=id)
+    save_directory = os.path.join(MEDIA_ROOT, emp.name)
+    os.makedirs(save_directory, exist_ok=True)
+    if request.method == 'POST' and request.FILES:
+        uploaded_files = request.FILES.getlist('photos')
+        for uploaded_file in uploaded_files:
+            filename=generate_unique_filename(uploaded_file.name)
+            with open(os.path.join(save_directory, filename), 'wb+') as destination:
+                for chunk in uploaded_file.chunks():
+                    destination.write(chunk)
+        emp.num_photos = len(uploaded_files)
+        emp.save()
+
+        return HttpResponseRedirect(reverse('add_photos'))  # Redirect to the desired page after successful upload
+    # if 'id' in request.GET:
+    #     id=request.GET['id']
+    return render(request, 'admintemp/image_form.html',{'id':id})  # Render a template with a form for file upload
+import random
+import string
+def generate_unique_filename(filename):
+    random_string = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    unique_filename = f"{random_string}_{filename}"
+    return unique_filename
+# from django.conf import settings
+# from django.core.files.storage import FileSystemStorage
+
+# def upload_photos(request, id):
+#     emp = get_object_or_404(Employee, id=id)
+#     save_directory = os.path.join(settings.BASE_DIR, 'app', 'facerec', 'dataset', emp.name)
+#     os.makedirs(save_directory, exist_ok=True)
+#
+#     if request.method == 'POST' and request.FILES:
+#         uploaded_files = request.FILES.getlist('photos')
+#
+#         for uploaded_file in uploaded_files:
+#             fs = FileSystemStorage(location=save_directory, base_url=settings.MEDIA_URL)
+#             fs.save(uploaded_file.name, uploaded_file)
+#
+#         # Redirect to the desired page after successful upload
+#         return HttpResponseRedirect(reverse('add_photos'))
+#
+#     # Render a template with a form for file upload
+#     return render(request, 'admintemp/image_form.html', {'id': id})
 
 
-def image_request(request,emp_id):
-    if request.method == 'POST':
-        form = UserImage(request.POST, request.FILES)
-        if form.is_valid():
-            form.instance.employee_id = emp_id
-            form.save()
+#@login_required(login_url='/app/login/')
+def add_photos(request):
+	emp_list = Employee.objects.all()
+	return render(request, 'app/add_photos.html', {'emp_list': emp_list})
 
-            # Getting the current instance object to display in the template
-            img_object = form.instance
+# @login_required(login_url='/app/login/')
+def click_photos(request, emp_id):
+    cam = cv2.VideoCapture(0)
+    emp = get_object_or_404(Employee, id=emp_id)
+    save_directory = os.path.join(MEDIA_ROOT, emp.name)
+    os.makedirs(save_directory, exist_ok=True)
 
-            return render(request, 'image_form.html', {'form': form, 'img_obj': img_object})
-    else:
-        form = UserImage()
+    click(emp.name, emp.id, cam)
 
-    return render(request, 'image_form.html', {'form': form})
+
+    return HttpResponseRedirect(reverse('add_photos'))
+
+

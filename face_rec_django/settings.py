@@ -129,7 +129,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media') 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'app', 'facerec', 'dataset')
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
 LOGIN_REDIRECT_URL = '/'

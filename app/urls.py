@@ -12,8 +12,7 @@ urlpatterns = [
     path('reply_Content/<int:id>/', views.reply_Content, name='reply_Content'),
     path('video_stream/', views.video_stream, name='video_stream'),
     path('add_photos/', views.add_photos, name='add_photos'),
-    path('click_photos/<int:emp_id>', views.click_photos, name='click_photos'),
-    path('image_request/', views.image_request, name='image_request'),
+    path('click_photos/<int:emp_id>/', views.click_photos, name='click_photos'),
     path('train_model/', views.train_model, name='train_model'),
     path('detected/', views.detected, name='detected'),
     path('detected_out/', views.detected_out, name='detected_out'),
@@ -36,6 +35,6 @@ urlpatterns = [
     path('generate_pdf/', views.generate_pdf, name='generate_pdf'),
     path('report_pdf/', views.report_pdf, name='report_pdf'),
     path('attendance_list/', views.attendance_list, name='attendance_list'),
-    path('attendance/', views.image_request, name='image_request'),
-
+    path('upload_photos/<int:id>/', views.upload_photos, name='upload_photos'),
+    path('generate_unique_filename/', views.generate_unique_filename, name='generate_unique_filename')
 ]
