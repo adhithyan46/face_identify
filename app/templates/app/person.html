@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block css %}
+<style>
+
+    #myInput {
+      background-image: url('/css/searchicon.png');
+      background-position: 10px 10px;
+      background-repeat: no-repeat;
+      width: 100%;
+      font-size: 16px;
+      padding: 12px 20px 12px 40px;
+      border: 1px solid #ddd;
+      margin-bottom: 12px;
+    }
+
+    #myTable {
+      border-collapse: collapse;
+      width: 100%;
+      border: 1px solid #ddd;
+      font-size: 18px;
+    }
+
+    #myTable th, #myTable td {
+      text-align: left;
+      padding: 12px;
+    }
+
+    #myTable tr {
+      border-bottom: 1px solid #ddd;
+    }
+
+    #myTable tr.header, #myTable tr:hover {
+      background-color: #f1f1f1;
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+
+<div class="container" style="background-color: white; padding: 50px;">
+
+<h1>PERSONAL REPORT</h1>
+</form>
+<br>
+
+
+  <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for name.." style="float: right; padding: 10px;">
+  <br>
+
+  <table id="myTable">
+    <tr class="header">
+      	<th width="200">Name</th>
+      	<th width="300">Detected_in</th>
+        <th width = "200">Detected_out</th>
+        <th width="200">Report</th>
+  	</tr>
+
+    {% for det in det_list %}
+
+        <tr>
+            <td>{{det.emp_id}}</td>
+            <td>{{det.rep}}</td>
+            <td>{{None}}</td>
+        </tr>
+
+  	{% endfor %}
+    {% for det1 in det_list_out %}
+
+        <tr>
+            <td>{{det1.emp_id}}</td>
+            <td>None</td>
+            <td>{{det1.out}}</td>
+
+        </tr>
+
+  	{% endfor %}
+  </table>
+</div>
+<div class="container" style="background-color: white; padding: 50px;">
+  <table id="myTable">
+    <tr class="header">
+      	<th width="200">ID</th>
+      	<th width="300">in</th>
+        <th width = "200">out</th>
+
+
+  </table>
+</div>
+
+
+<script>
+    function myFunction() {
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("myInput");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("myTable");
+  tr = table.getElementsByTagName("tr");
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[0];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+}
+</script>
+{% endblock %}

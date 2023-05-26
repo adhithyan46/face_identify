@@ -38,7 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_forms' ,
+    'crispy_forms',
+    'crispy_bootstrap5',
+    # 'celery'
 ]
 
 MIDDLEWARE = [
@@ -113,17 +115,27 @@ TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 
 USE_L10N = True
-
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
-
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
+AUTH_USER_MODEL='app.Login'
 USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
+# PDFKIT_CONFIG = {
+#     'WKHTMLTOPDF_PATH': 'c:/users/sreehari cr/appdata/roaming/python/python39/site-packages',
+#     'USE_CELERY': False,
+# }
 
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media') 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'app', 'facerec', 'dataset')
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+# Celery settings
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+LOGIN_REDIRECT_URL = '/'
 

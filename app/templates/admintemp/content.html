@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="col-lg-10">
+    {% for message in messages %}
+    <div class="alert alert-primary" role="alert">
+        {{message}}
+    </div>
+    {% endfor %}
+    <div class="card">
+        <div class="card-header">
+            <strong class="card-title"> Messages</strong>
+            <a href="{% url 'generate_pdf3' %}">Save to PDF</a>
+            <a class="btn btn-primary"  href="{% url 'index' %}" style="font-size: 20px; margin-bottom: 10px;float:right">home</a>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">SI No</th>
+<!--                    <th scope="col">Type</th>-->
+                    <th scope="col">Username</th>
+                    <th scope="col">Subject</th>
+                    <th scope="col">Messages</th>
+<!--                    <th scope="col">Date</th>-->
+                    <th scope="col">Reply</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for n in Content %}
+                <tr>
+                    <th scope="row">{{forloop.counter}}</th>
+<!--                    <td>-->
+<!--                        {% if n.user.is_user == True %}-->
+<!--                        <p>user</p>-->
+<!--&lt;!&ndash;                        {% elif n.user.is_user == True %}&ndash;&gt;-->
+<!--&lt;!&ndash;                        <p>User</p>&ndash;&gt;-->
+<!--                        {% endif %}-->
+<!--                    </td>-->
+                    <td>{{n.user.user}}</td>
+                    <td>{{n.subject}}</td>
+                    <td>{{n.content}}</td>
+<!--                    <td>{{n.date}}</td>-->
+                    <td>
+                        {% if n.reply == None %}
+                        <a href="{% url 'reply_Content' n.id %}">Reply Now</a>
+                        {% else %}
+                        {{n.reply}}
+                        {% endif %}
+                    </td>
+
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

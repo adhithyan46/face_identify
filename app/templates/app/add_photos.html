@@ -44,19 +44,23 @@
 {% block content %}
 <div class="container" style="background-color: white; padding: 50px; float: ">
   <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for id.." style="float: right;padding: 10px;">
-
+	<a class="btn btn-primary"  href="{% url 'index' %}" style="font-size: 20px; margin-bottom: 10px;float:right;">go back</a>
   <table id="myTable">
     	<tr class="header">
       	<th width="200">ID</th>
       	<th width="300">Name</th>
+		<th width="200">take photo</th>
+		<th width="200">upload photo</th>
         <th width="100">Photos</th>
   	</tr>
 
   	{% for emp in emp_list %}
   		<tr style="height: 50px; width: 50px;">
-  			<td>{{emp.id}}</td>
-  			<td><a href="{% url 'click_photos' emp.id %}">{{emp.name}}</a></td>
-        <td>{{emp.num_photos}}</td>
+			<td>{{emp.id}}</td>
+			<td>{{emp.name}}</td>
+  			<td><a href="{% url 'click_photos' emp.id %}">click</a></td>
+  			<td><a href="{% url 'upload_photos' emp.id %}">click</a></td>
+            <td>{{emp.num_photos}}</td>
   		</tr>
   	{% endfor %}
   </table>
@@ -80,7 +84,7 @@ function myFunction() {
       } else {
         tr[i].style.display = "none";
       }
-    }       
+    }
   }
 }
 </script>

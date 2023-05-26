@@ -15,6 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+
+
+import app
+from app import views
 from . import settings
 from django.contrib.staticfiles.urls import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
@@ -23,6 +27,7 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('', include('app.urls')),
     path('admin/', admin.site.urls),
+
 ]
 
 urlpatterns += staticfiles_urlpatterns()

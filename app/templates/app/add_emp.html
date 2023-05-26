@@ -10,13 +10,13 @@
 
     <form method="POST">{% csrf_token %}
         <div class="fieldWrapper">
-            {{form| crispy}}
-            
+            {{form1| crispy}}
+            {{form2| crispy}}
+
+
 
         </div>
         <button type="submit" class="save btn btn-info">Save</button>
     </form>
     </div>
 {% endblock %}
-
-

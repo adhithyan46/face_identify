@@ -81,6 +81,6 @@ def trainer():
     # STEP 1: Train the KNN classifier and save it to disk
     # Once the model is trained and saved, you can skip this step next time.
     print("Training KNN classifier...")
-    classifier = train("app/facerec/dataset", model_save_path="app/facerec/models/trained_model.clf", n_neighbors=3)
+    classifier = train("app/facerec/dataset/", model_save_path="app/facerec/models/trained_model.clf", n_neighbors=3)
     print("Training complete!")
 

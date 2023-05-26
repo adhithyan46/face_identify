@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="col-md-8">
+    {% for message in messages %}
+    <div class="alert alert-primary" role="alert">
+        {{message}}
+    </div>
+    {% endfor %}
+    <div class="card">
+        <div class="card-header">
+            <i class="fa fa-user"></i><strong class="card-title pl-2">My Profile </strong>
+            <a href="{% url 'generate_pdf' %}">Download PDF</a>
+        </div>
+
+        {% for u in profile %}
+        <div class="card-body">
+            <div class="mx-auto d-block">
+
+                <h5 class="text-sm-center mt-2 mb-1">{{u.name}}</h5>
+                <div class="location text-sm-center"><i class="fa fa-map-marker"></i> {{u.id}}</div>
+                <div class="location text-sm-center"><i class="fa fa-phone"></i> {{u.department}}</div>
+                <hr>
+                <div class="ml-5 mt-2 mb-1">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <label>department</label>
+                        </div>
+                        <div class="col-lg-2">
+                            <label>: {{u.department}}</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <label>designation</label>
+                        </div>
+                        <div class="col-lg-2">
+                            <label>: {{u.designation}}</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <label>team</label>
+                        </div>
+                        <div class="col-lg-2">
+                            <label>: {{u.team}}</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <label>gender</label>
+                        </div>
+                        <div class="col-lg-2">
+                            <label>: {{u.gender}}</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <label>date_of_birth</label>
+                        </div>
+                        <div class="col-lg-2">
+                            <label>: {{u.date_of_birth}}</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <label>date_of_joining</label>
+                        </div>
+                        <div class="col-lg-2">
+                            <label>: {{u.date_of_joining}}</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <label>contact_number</label>
+                        </div>
+                        <div class="col-lg-2">
+                            <label>:{{u.contact_number}}</label>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

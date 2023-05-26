@@ -5,7 +5,7 @@
 <style>
 
     #myInput {
-      background-image: url('/css/searchicon.png');
+      background-image: url('/static/css/searchicon.png');
       background-position: 10px 10px;
       background-repeat: no-repeat;
       width: 100%;
@@ -42,10 +42,12 @@
 
 
 <div class="container" style="background-color: white; padding: 50px;">
+		<a href="{% url 'attendance_pdf' %}">Generate PDF</a>
 
-<form type="get" action="." style="margin: 0">
+
+<form method="get" action="." style="margin: 0">
     Enter Date: <input id="search_submit" type="date" name="search_box">
-    <button id="search_submit" type="submit" >Submit</button>
+    <button id="search_submit" type="submit">Submit</button>
 </form>
 <br>
 
@@ -55,83 +57,29 @@
   <br>
 
   <table id="myTable">
-    <tr class="header">
-      	<th width="200">ID</th>
-      	<th width="300">in</th>
-        <th width = "200">out</th>
-  	</tr>
-  	
-    {% for det in det_list_in %}
-
-        <tr>
-            <td>{{det.emp_id}}</td>
-            <td>{{det.entry}}</td>
-            <td>None</td>          
-        </tr>
-
-  	{% endfor %}
-    {% for det1 in det_list_out %}
-
-        <tr>
-            <td>{{det1.emp_id}}</td>
-            <td>None</td>
-            <td>{{det1.out}}</td>
-          
-        </tr>
-
-  	{% endfor %}
+ 	  <thead>
+			  <tr>
+				  <th>Employee ID</th>
+				  <th>Employee Name</th>
+				  <th>Entry Time</th>
+				  <th>Exit Time</th>
+				  <th>Total Time</th>
+			  </tr>
+		  </thead>
+		  <tbody>
+			  {% for data in attendance_data %}
+				  <tr>
+					  <td>{{ data.employee_id }}</td>
+					  <td>{{ data.employee_name }}</td>
+					  <td>{{ data.entry_time }}</td>
+					  <td>{{ data.exit_time }}</td>
+					  <td>{{ data.total_time }}</td>
+				  </tr>
+			  {% endfor %}
+		  </tbody>
+	  </table>
+    </tbody>
   </table>
-</div>
-<div class="container" style="background-color: white; padding: 50px;">
-  <table id="myTable">
-    <tr class="header">
-      	<th width="200">ID</th>
-      	<th width="300">in</th>
-        <th width = "200">out</th>
-  	</tr>
-  	
-    {% for det in report_in %}
-
-    <tr>
-        <td>{{det.emp_id}}</td>
-        <td>{{det.entry}}</td>
-        <td>None</td>          
-    </tr>
-
-{% endfor %}
-{% for det1 in report_out %}
-
-    <tr>
-        <td>{{det1.emp_id}}</td>
-        <td>None</td>
-        <td>{{det1.out}}</td>
-      
-    </tr>
-
-{% endfor %}
-    
-  </table>
-</div>
-<div class="container" style="background-color: white; padding: 50px;">
-  <table id="myTable">
-    <tr class="header">
-      	<th width="200">ID</th>
-      	<th width="300">in</th>
-        <th width = "200">out</th>
-  	</tr>
-  	
-    {% for det in report %}
-
-        <tr>
-            <td>{{det.emp_id}}</td>
-            <td>{{det.entry}}</td>
-            <td>{{det.out}}</td>         
-        </tr>
-
-  	{% endfor %}
-    
-  </table>
-</div>
 
 
 <script>
@@ -142,7 +90,7 @@
   table = document.getElementById("myTable");
   tr = table.getElementsByTagName("tr");
   for (i = 0; i < tr.length; i++) {
-    td = tr[i].getElementsByTagName("td")[0];
+    td = tr[i].getElementsByTagName("td")[1];
     if (td) {
       txtValue = td.textContent || td.innerText;
       if (txtValue.toUpperCase().indexOf(filter) > -1) {
