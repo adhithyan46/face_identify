@@ -429,54 +429,161 @@ def attendece_rep(request):
     return render(request, 'app/attendencereport.html', context)
 
 # @login_required(login_url='/app/login/')
+# def reportt(request):
+#     if request.method == 'GET':
+#         date_formatted = datetime.datetime.today().date()
+#         date = request.GET.get('search_box', None)
+#         if date is not None:
+#             date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+#         det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('out').reverse()
+#         det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('entry').reverse()
+#         report1 = report.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+#         report_in = Detected_in.objects.all()
+#         report_out = Detected_out.objects.all()
+#         attendance_data = []
+#         report_data = []
+#
+#         for det1, det2 in zip(det_list_out, det_list_in):
+#             if det1.emp_id_id == det2.emp_id_id:
+#                 total_time = det1.out - det2.entry
+#                 total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+#                 attendance_data.append({
+#                     'employee_id': det1.emp_id_id,
+#                     'employee_name': det1.emp_id,
+#                     'entry_time': det2.entry,
+#                     'exit_time': det1.out,
+#                     'total_time': total_time_str,
+#                 })
+#         for rep1, rep2 in zip(report_in, report_out):
+#             if rep1.emp_id_id == rep2.emp_id_id:
+#                 total_time = rep2.out - rep1.entry
+#                 total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+#                 report_data.append({
+#                     'employee_id': rep1.emp_id_id,
+#                     'employee_name': rep1.emp_id,
+#                     'entry_time': rep1.entry,
+#                     'exit_time': rep2.out,
+#                     'total_time': total_time_str,
+#
+#                 })
+#         context = {
+#             'attendance_data': attendance_data,
+#             'report_data': report_data,
+#             'date': date_formatted,
+#             'report1': report1,
+#
+#         }
+#
+#     return render(request, 'app/report.html', context)
+
 def reportt(request):
     if request.method == 'GET':
         date_formatted = datetime.datetime.today().date()
         date = request.GET.get('search_box', None)
         if date is not None:
             date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+
         det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('out').reverse()
         det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('entry').reverse()
         report1 = report.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
         report_in = Detected_in.objects.all()
         report_out = Detected_out.objects.all()
+
         attendance_data = []
         report_data = []
 
-        for det1, det2 in zip(det_list_out, det_list_in):
-            if det1.emp_id_id == det2.emp_id_id:
-                total_time = det1.out - det2.entry
+        # Process Detected_out and Detected_in entries
+        for det_out in det_list_out:
+            matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id)
+            if matching_det_in.exists():
+                det_in = matching_det_in.first()
+                total_time = det_out.out - det_in.entry
                 total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
                 attendance_data.append({
-                    'employee_id': det1.emp_id_id,
-                    'employee_name': det1.emp_id,
-                    'entry_time': det2.entry,
-                    'exit_time': det1.out,
+                    'employee_id': det_out.emp_id_id,
+                    'employee_name': det_out.emp_id,
+                    'entry_time': det_in.entry,
+                    'exit_time': det_out.out,
                     'total_time': total_time_str,
                 })
-        for rep1, rep2 in zip(report_in, report_out):
-            if rep1.emp_id_id == rep2.emp_id_id:
-                total_time = rep2.out - rep1.entry
+
+        # Process Detected_in entries without a corresponding Detected_out entry
+        for det_in in det_list_in:
+            if not det_list_out.filter(emp_id_id=det_in.emp_id_id).exists():
+                attendance_data.append({
+                    'employee_id': det_in.emp_id_id,
+                    'employee_name': det_in.emp_id,
+                    'entry_time': det_in.entry,
+                    'exit_time': None,
+                    'total_time': None,
+                })
+
+        # Process report entries
+        for rep_in, rep_out in zip(report_in, report_out):
+            if rep_in.emp_id_id == rep_out.emp_id_id:
+                total_time = rep_out.out - rep_in.entry
                 total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
                 report_data.append({
-                    'employee_id': rep1.emp_id_id,
-                    'employee_name': rep1.emp_id,
-                    'entry_time': rep1.entry,
-                    'exit_time': rep2.out,
+                    'employee_id': rep_in.emp_id_id,
+                    'employee_name': rep_in.emp_id,
+                    'entry_time': rep_in.entry,
+                    'exit_time': rep_out.out,
                     'total_time': total_time_str,
-
                 })
+
         context = {
             'attendance_data': attendance_data,
             'report_data': report_data,
             'date': date_formatted,
             'report1': report1,
-
         }
 
     return render(request, 'app/report.html', context)
 
-
+# def attendece_rep2(request):
+#     if request.method == 'GET':
+#         start_date = request.GET.get('start_date', None)
+#         end_date = request.GET.get('end_date', None)
+#
+#         if not start_date and not end_date:
+#             # If no dates were provided, default to today's date
+#             date_formatted = datetime.datetime.today().date()
+#             start_date_formatted = date_formatted
+#             end_date_formatted = date_formatted
+#
+#         else:
+#             start_date_formatted = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+#             end_date_formatted = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+#
+#         det_list_out = Detected_out.objects.filter(
+#             out__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
+#         det_list_in = Detected_in.objects.filter(
+#             entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
+#         report = Rep.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by(
+#             'emp_id_id').reverse()
+#
+#         attendance_data = []
+#
+#         for det1, det2 in zip(det_list_out, det_list_in):
+#             if det1.emp_id_id == det2.emp_id_id:
+#                 total_time = det1.out - det2.entry
+#                 total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+#                 attendance_data.append({
+#                     'employee_id': det1.emp_id_id,
+#                     'employee_name': det1.emp_id,
+#                     'entry_time': det2.entry,
+#                     'exit_time': det1.out,
+#                     'total_time': total_time_str,
+#                 })
+#
+#         context = {
+#             'attendance_data': attendance_data,
+#             'start_date': start_date_formatted,
+#             'end_date': end_date_formatted,
+#             'report': report,
+#         }
+#
+#     return render(request, 'app/attendece_rep2.html', context)
 def attendece_rep2(request):
     if request.method == 'GET':
         start_date = request.GET.get('start_date', None)
@@ -501,16 +608,30 @@ def attendece_rep2(request):
 
         attendance_data = []
 
-        for det1, det2 in zip(det_list_out, det_list_in):
-            if det1.emp_id_id == det2.emp_id_id:
-                total_time = det1.out - det2.entry
+        # Process Detected_out and Detected_in entries
+        for det_out in det_list_out:
+            matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id)
+            if matching_det_in.exists():
+                det_in = matching_det_in.first()
+                total_time = det_out.out - det_in.entry
                 total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
                 attendance_data.append({
-                    'employee_id': det1.emp_id_id,
-                    'employee_name': det1.emp_id,
-                    'entry_time': det2.entry,
-                    'exit_time': det1.out,
+                    'employee_id': det_out.emp_id_id,
+                    'employee_name': det_out.emp_id,
+                    'entry_time': det_in.entry,
+                    'exit_time': det_out.out,
                     'total_time': total_time_str,
+                })
+
+        # Process Detected_in entries without a corresponding Detected_out entry
+        for det_in in det_list_in:
+            if not det_list_out.filter(emp_id_id=det_in.emp_id_id).exists():
+                attendance_data.append({
+                    'employee_id': det_in.emp_id_id,
+                    'employee_name': det_in.emp_id,
+                    'entry_time': det_in.entry,
+                    'exit_time': None,
+                    'total_time': None,
                 })
 
         context = {
