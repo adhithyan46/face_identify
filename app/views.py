@@ -7,7 +7,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.template.loader import get_template, render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -119,7 +119,7 @@ def predict(rgb_frame, knn_clf=None, model_path=None, distance_threshold=0.5):
 from datetime import date
 
 
-# @login_required(login_url='/app/login/')
+@login_required(login_url='/app/login/')
 def identify_faces(video_capture1, video_capture2):
     buf_length = 10
     known_conf = 6
@@ -236,24 +236,27 @@ def identify_faces(video_capture1, video_capture2):
     cv2.destroyAllWindows()
 
 
-# @login_required(login_url='/app/login/')
+@login_required(login_url='/app/login/')
 def index(request):
     return render(request, 'app/index.html')
 
 
-# @login_required(login_url='/app/login/')
+@login_required(login_url='/app/login/')
 def video_stream(request):
     stream()
     return HttpResponseRedirect(reverse('index'))
 
 
-# @login_required(login_url='/accounts/login/')
+@login_required(login_url='/app/login/')
 def train_model(request):
+    # message = "Training in progress. Please wait..."
     trainer()
-    return HttpResponseRedirect(reverse('index'))
+    message="Training completed"
+    return render(request, 'app/index.html', {'message': message})
+    # return HttpResponseRedirect(reverse('index'))
 
 
-# @login_required(login_url='/app/login/')
+@login_required(login_url='/app/login/')
 def detected(request):
     if request.method == 'GET':
         date_formatted = datetime.datetime.today().date()
@@ -266,7 +269,7 @@ def detected(request):
     return render(request, 'app/detected.html', {'det_list': det_list, 'date': date_formatted})
 
 
-# @login_required(login_url='/app/login/')
+@login_required(login_url='/app/login/')
 def detected_out(request):
     if request.method == 'GET':
         date_formatted = datetime.datetime.today().date()
@@ -290,89 +293,7 @@ def identify(request):
 # @login_required(login_url='/app/login/')
 def admin(request):
     return redirect(request, 'admin:index')
-
-
-# @login_required(login_url='/app/login/')
-# def attendece_rep(request):
-#     if request.method == 'GET':
-#         date_formatted = datetime.datetime.today().date()
-#         date = request.GET.get('search_box', None)
-#         if date is not None:
-#             date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-#
-#         det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
-#         det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
-#         report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
-#
-#         attendance_data = []
-#
-#         for det1, det2 in zip(det_list_out, det_list_in):
-#             if det1.emp_id_id == det2.emp_id_id:
-#                 total_time = det1.out - det2.entry
-#                 total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
-#                 attendance_data.append({
-#                     'employee_id': det1.emp_id_id,
-#                     'employee_name': det1.emp_id,
-#                     'entry_time': det2.entry,
-#                     'exit_time': det1.out,
-#                     'total_time': total_time_str,
-#                 })
-#
-#         context = {
-#             'attendance_data': attendance_data,
-#             'date': date_formatted,
-#             'report': report,
-#         }
-#
-#     return render(request, 'app/attendencereport.html', context)
-# from django.db.models import OuterRef, Subquery
-#
-# def attendece_rep(request):
-#     if request.method == 'GET':
-#         date_formatted = datetime.datetime.today().date()
-#         date = request.GET.get('search_box', None)
-#         if date is not None:
-#             date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-#
-#         # Get the latest Detected_out entry for each employee
-#         latest_out_entries = Detected_out.objects.filter(emp_id_id=OuterRef('emp_id_id'), out__date=date_formatted).order_by('-out')
-#         det_list_out = Detected_out.objects.filter(emp_id_id__in=latest_out_entries.values('emp_id_id')).order_by('emp_id_id').reverse()
-#
-#         # Get the earliest Detected_in entry for each employee
-#         earliest_in_entries = Detected_in.objects.filter(emp_id_id=OuterRef('emp_id_id'), entry__date=date_formatted).order_by('entry')
-#         det_list_in = Detected_in.objects.filter(emp_id_id__in=earliest_in_entries.values('emp_id_id')).order_by('emp_id_id').reverse()
-#
-#         report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
-#
-#         attendance_data = []
-#
-#         for det_out in det_list_out:
-#             entry_time = None
-#             total_time_str = None
-#
-#             matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id)
-#             if matching_det_in.exists():
-#                 det_in = matching_det_in.first()
-#                 entry_time = det_in.entry
-#                 total_time = det_out.out - det_in.entry
-#                 total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
-#
-#             attendance_data.append({
-#                 'employee_id': det_out.emp_id_id,
-#                 'employee_name': det_out.emp_id,
-#                 'entry_time': entry_time,
-#                 'exit_time': det_out.out,
-#                 'total_time': total_time_str,
-#             })
-#
-#         context = {
-#             'attendance_data': attendance_data,
-#             'date': date_formatted,
-#             'report': report,
-#         }
-#
-#     return render(request, 'app/attendencereport.html', context)
-
+@login_required(login_url='/app/login/')
 def attendece_rep(request):
     if request.method == 'GET':
         date_formatted = datetime.datetime.today().date()
@@ -427,55 +348,7 @@ def attendece_rep(request):
         }
 
     return render(request, 'app/attendencereport.html', context)
-
-# @login_required(login_url='/app/login/')
-# def reportt(request):
-#     if request.method == 'GET':
-#         date_formatted = datetime.datetime.today().date()
-#         date = request.GET.get('search_box', None)
-#         if date is not None:
-#             date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-#         det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('out').reverse()
-#         det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('entry').reverse()
-#         report1 = report.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
-#         report_in = Detected_in.objects.all()
-#         report_out = Detected_out.objects.all()
-#         attendance_data = []
-#         report_data = []
-#
-#         for det1, det2 in zip(det_list_out, det_list_in):
-#             if det1.emp_id_id == det2.emp_id_id:
-#                 total_time = det1.out - det2.entry
-#                 total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
-#                 attendance_data.append({
-#                     'employee_id': det1.emp_id_id,
-#                     'employee_name': det1.emp_id,
-#                     'entry_time': det2.entry,
-#                     'exit_time': det1.out,
-#                     'total_time': total_time_str,
-#                 })
-#         for rep1, rep2 in zip(report_in, report_out):
-#             if rep1.emp_id_id == rep2.emp_id_id:
-#                 total_time = rep2.out - rep1.entry
-#                 total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
-#                 report_data.append({
-#                     'employee_id': rep1.emp_id_id,
-#                     'employee_name': rep1.emp_id,
-#                     'entry_time': rep1.entry,
-#                     'exit_time': rep2.out,
-#                     'total_time': total_time_str,
-#
-#                 })
-#         context = {
-#             'attendance_data': attendance_data,
-#             'report_data': report_data,
-#             'date': date_formatted,
-#             'report1': report1,
-#
-#         }
-#
-#     return render(request, 'app/report.html', context)
-
+@login_required(login_url='/app/login/')
 def reportt(request):
     if request.method == 'GET':
         date_formatted = datetime.datetime.today().date()
@@ -539,51 +412,7 @@ def reportt(request):
         }
 
     return render(request, 'app/report.html', context)
-
-# def attendece_rep2(request):
-#     if request.method == 'GET':
-#         start_date = request.GET.get('start_date', None)
-#         end_date = request.GET.get('end_date', None)
-#
-#         if not start_date and not end_date:
-#             # If no dates were provided, default to today's date
-#             date_formatted = datetime.datetime.today().date()
-#             start_date_formatted = date_formatted
-#             end_date_formatted = date_formatted
-#
-#         else:
-#             start_date_formatted = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
-#             end_date_formatted = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
-#
-#         det_list_out = Detected_out.objects.filter(
-#             out__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
-#         det_list_in = Detected_in.objects.filter(
-#             entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
-#         report = Rep.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by(
-#             'emp_id_id').reverse()
-#
-#         attendance_data = []
-#
-#         for det1, det2 in zip(det_list_out, det_list_in):
-#             if det1.emp_id_id == det2.emp_id_id:
-#                 total_time = det1.out - det2.entry
-#                 total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
-#                 attendance_data.append({
-#                     'employee_id': det1.emp_id_id,
-#                     'employee_name': det1.emp_id,
-#                     'entry_time': det2.entry,
-#                     'exit_time': det1.out,
-#                     'total_time': total_time_str,
-#                 })
-#
-#         context = {
-#             'attendance_data': attendance_data,
-#             'start_date': start_date_formatted,
-#             'end_date': end_date_formatted,
-#             'report': report,
-#         }
-#
-#     return render(request, 'app/attendece_rep2.html', context)
+@login_required(login_url='/app/login/')
 def attendece_rep2(request):
     if request.method == 'GET':
         start_date = request.GET.get('start_date', None)
@@ -644,7 +473,7 @@ def attendece_rep2(request):
     return render(request, 'app/attendece_rep2.html', context)
 
 
-# @login_required(login_url='/app/login/')
+@login_required(login_url='/app/login/')
 def person(request):
     if request.method == 'POST':
         date_formatted = datetime.datetime.today().date()
@@ -670,7 +499,7 @@ def person(request):
                    'report_in': report_in, 'report_out': report_out})
 
 
-# @login_required(login_url='/app/login/')
+@login_required(login_url='/app/login/')
 def logout_view(request):
     logout(request)
     return redirect('login_view')
@@ -679,7 +508,7 @@ def logout_view(request):
 from django.contrib.auth import authenticate, login
 
 
-# @login_required(login_url='/app/login/')
+@login_required(login_url='/app/login/')
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('user')
@@ -722,26 +551,6 @@ def add_emp(request):
     return render(request, 'app/add_emp.html', {'form1': form1, 'form2': form2})
 
 
-def Content_add(request):
-    form = ContentForm()
-    u = request.user
-    if request.method == 'POST':
-        form = ContentForm(request.POST)
-        if form.is_valid():
-            obj = form.save(commit=False)
-            obj.user = u
-            obj.save()
-            messages.info(request, 'Content Registered Successfully')
-            return redirect('Contentt')
-    else:
-        form = ContentForm()
-    return render(request, 'app/content_add.html', {'form': form})
-
-
-def Contentt(request):
-    n = Content.objects.filter(user=request.user)
-    return render(request, 'app/content.html', {'Content': n})
-
 
 def Content_admin(request):
     n = Content.objects.all()
@@ -759,54 +568,6 @@ def reply_Content(request, id):
     return render(request, 'admintemp/content_reply.html ', {'content': content})
 
 
-def user_profile(request):
-    u = request.user
-    profile = Employee.objects.filter(user=u)
-    return render(request, 'app/user_profile.html', {'profile': profile})
-
-
-def personal_report(request):
-    if request.method == 'GET':
-        user = request.user
-        employee = Employee.objects.get(user=user)
-        date_formatted = datetime.datetime.today().date()
-        date = request.GET.get('search_box', None)
-        if date is not None:
-            date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-        report_in = Detected_in.objects.filter(emp_id=employee, entry__date=date_formatted).order_by(
-            'emp_id_id').reverse()
-        report_out = Detected_out.objects.filter(emp_id=employee, out__date=date_formatted).order_by(
-            'emp_id_id').reverse()
-
-        report_data = []
-        for rep1, rep2 in zip(report_in, report_out):
-            if rep1.emp_id_id == rep2.emp_id_id:
-                total_time = rep2.out - rep1.entry
-                total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
-                report_data.append({
-                    # 'employee_id': user.id,
-                    # 'employee_name': user.name,
-                    'entry_time': rep1.entry,
-                    'exit_time': rep2.out,
-                    'total_time': total_time_str,
-                })
-        print(user)
-        context = {
-            'report_data': report_data,
-            # 'date': date_formatted,
-        }
-        return render(request, 'admintemp/personal_report.html', context)
-
-
-# from django.http import HttpResponse
-# from reportlab.pdfgen import canvas
-# from django.template.loader import render_to_string
-# from io import BytesIO
-# from django.http import HttpResponse
-# from django.template.loader import get_template
-from xhtml2pdf import pisa
-
-
 def generate_pdf3(request):
     template = get_template('admintemp/content.html')
     context = {'Content': Content.objects.all()}  # Pass the Content data to the template context
@@ -820,93 +581,124 @@ def generate_pdf3(request):
     return response
 
 
-def generate_pdf4(request):
-    # get the template
-    template = get_template('admintemp/personal_report.html')
 
-    # get the context data
-    user = request.user
-    employee = Employee.objects.get(user=user)
-    date_formatted = datetime.datetime.today().date()
-    date = request.GET.get('search_box', None)
-    if date is not None:
-        date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-    report_in = Detected_in.objects.filter(emp_id=employee, entry__date=date_formatted).order_by('emp_id_id').reverse()
-    report_out = Detected_out.objects.filter(emp_id=employee, out__date=date_formatted).order_by('emp_id_id').reverse()
-
-    report_data = []
-    for rep1, rep2 in zip(report_in, report_out):
-        if rep1.emp_id_id == rep2.emp_id_id:
-            total_time = rep2.out - rep1.entry
-            total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
-            report_data.append({
-                # 'employee_id': user.id,
-                # 'employee_name': user.name,
-                'entry_time': rep1.entry,
-                'exit_time': rep2.out,
-                'total_time': total_time_str,
-            })
-
-    context = {
-        'report_data': report_data,
-        # 'date': date_formatted,
-    }
-
-    # render the template with the context data
-    html = template.render(context)
-
-    # create a PDF object
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'filename="personal_report.pdf"'
-
-    # create the PDF
-    pisa_status = pisa.CreatePDF(
-        html, dest=response)
-
-    # return the PDF object
-    if pisa_status.err:
-        return HttpResponse('Failed to generate PDF')
-    return response
-
+from django.http import HttpResponse
+from django.template.loader import get_template
+import datetime
+from xhtml2pdf import pisa
 
 def attendance_pdf(request):
-    # get the attendance data from the database
-    date_formatted = datetime.datetime.today().date()
-    date = request.GET.get('search_box', None)
-    if date is not None:
-        date_formatted = datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").date()
+    if request.method == 'GET':
+        date_formatted = datetime.datetime.today().date()
+        date = request.GET.get('search_box', None)
+        if date is not None:
+            date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
 
-    det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
-    det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+        det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
+        det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+        report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
 
-    attendance_data = []
+        attendance_data = []
 
-    for det1, det2 in zip(det_list_out, det_list_in):
-        if det1.emp_id_id == det2.emp_id_id:
-            total_time = det1.out - det2.entry
-            total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
-            attendance_data.append({
-                'employee_id': det1.emp_id_id,
-                'employee_name': det1.emp_id,
-                'entry_time': det2.entry,
-                'exit_time': det1.out,
-                'total_time': total_time_str,
-            })
+        # Process Detected_out entries
+        for det_out in det_list_out:
+            matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id)
+            if matching_det_in.exists():
+                det_in = matching_det_in.first()
+                total_time = det_out.out - det_in.entry
+                total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+                attendance_data.append({
+                    'employee_id': det_out.emp_id_id,
+                    'employee_name': det_out.emp_id,
+                    'entry_time': det_in.entry,
+                    'exit_time': det_out.out,
+                    'total_time': total_time_str,
+                })
+            else:
+                attendance_data.append({
+                    'employee_id': det_out.emp_id_id,
+                    'employee_name': det_out.emp_id,
+                    'entry_time': None,
+                    'exit_time': det_out.out,
+                    'total_time': None,
+                })
 
-    # get the template
-    template = get_template('app/attendencereport.html')
-    # render the template with the attendance data
-    html = template.render({'attendance_data': attendance_data, 'date': date_formatted})
-    # create a PDF object
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
+        # Process Detected_in entries without a corresponding Detected_out entry
+        for det_in in det_list_in:
+            if not det_list_out.filter(emp_id_id=det_in.emp_id_id).exists():
+                attendance_data.append({
+                    'employee_id': det_in.emp_id_id,
+                    'employee_name': det_in.emp_id,
+                    'entry_time': det_in.entry,
+                    'exit_time': None,
+                    'total_time': None,
+                })
 
-    # create a PDF
-    pisa.CreatePDF(html, dest=response)
-    print(attendance_data)
+        context = {
+            'attendance_data': attendance_data,
+            'date': date_formatted,
+            'report': report,
+        }
 
-    # return the PDF
-    return response
+        # Get the template
+        template = get_template('app/attendencereport.html')
+        html = template.render(context)
+
+        # Create a PDF object
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
+
+        # Generate the PDF
+        pisa.CreatePDF(html, dest=response, link_callback=fetch_resources)
+
+        return response
+
+    return render(request, 'app/attendencereport.html')
+
+
+def fetch_resources(uri, rel):
+    # Callback function used by pisa to fetch external resources such as CSS and images
+    # Return empty string for all resources to exclude them from the PDF
+    return ''
+
+# def attendance_pdf(request):
+#     # get the attendance data from the database
+#     date_formatted = datetime.datetime.today().date()
+#     date = request.GET.get('search_box', None)
+#     if date is not None:
+#         date_formatted = datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%fZ").date()
+#
+#     det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
+#     det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+#
+#     attendance_data = []
+#
+#     for det1, det2 in zip(det_list_out, det_list_in):
+#         if det1.emp_id_id == det2.emp_id_id:
+#             total_time = det1.out - det2.entry
+#             total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+#             attendance_data.append({
+#                 'employee_id': det1.emp_id_id,
+#                 'employee_name': det1.emp_id,
+#                 'entry_time': det2.entry,
+#                 'exit_time': det1.out,
+#                 'total_time': total_time_str,
+#             })
+#
+#     # get the template
+#     template = get_template('app/attendencereport.html')
+#     # render the template with the attendance data
+#     html = template.render({'attendance_data': attendance_data, 'date': date_formatted})
+#     # create a PDF object
+#     response = HttpResponse(content_type='application/pdf')
+#     response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
+#
+#     # create a PDF
+#     pisa.CreatePDF(html, dest=response)
+#     print(attendance_data)
+#
+#     # return the PDF
+#     return response
 
 
 from django.http import HttpResponse

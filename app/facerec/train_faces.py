@@ -1,3 +1,6 @@
+from urllib import request
+
+from django.http import JsonResponse
 from tqdm import tqdm
 import math
 from sklearn import neighbors
@@ -6,6 +9,7 @@ import os.path
 import pickle
 import face_recognition
 from face_recognition.face_recognition_cli import image_files_in_folder
+from django.contrib import messages
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
@@ -83,4 +87,5 @@ def trainer():
     print("Training KNN classifier...")
     classifier = train("app/facerec/dataset/", model_save_path="app/facerec/models/trained_model.clf", n_neighbors=3)
     print("Training complete!")
+
 

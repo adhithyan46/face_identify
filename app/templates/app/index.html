@@ -13,7 +13,26 @@
 		<a class="btn btn-primary"  href="{% url 'detected_out' %}" style="font-size: 20px; margin-bottom: 10px;">Detected out Faces</a>
 		<a class="btn btn-primary" href="{% url 'add_emp' %}" style="font-size: 20px; margin-bottom: 10px;">add_emp</a>
 		<a class="btn btn-primary"  href="{% url 'add_photos' %}" style="font-size: 20px; margin-bottom: 10px;">Add photos</a>
-		<a class="btn btn-primary"  href="{% url 'train_model' %}" style="font-size: 20px; margin-bottom: 10px;">Train model</a>
+		<a id="train-model-btn" class="btn btn-primary" href="{% url 'train_model' %}" style="font-size: 20px; margin-bottom: 10px;">Train model</a>
+		<!-- Add a <span> element to display the message -->
+		<span id="train-status" style="font-size: 20px;"></span>
+
+    <script>
+        document.getElementById('train-model-btn').addEventListener('click', trainModel);
+
+        function trainModel() {
+            document.getElementById('train-status').innerText = "Training in progress. Please wait...";
+
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+           			 document.getElementById('train-status').innerText = "Oyeah Done";
+                }
+            };
+            xhttp.open('GET', '/app/train_model/', true);
+            xhttp.send();
+        }
+    </script>
 		<a class="btn btn-primary"  href="{% url 'attendece_rep' %}" style="font-size: 20px; margin-bottom: 10px;">report</a>
 		<a class="btn btn-primary"  href="{% url 'report' %}" style="font-size: 20px; margin-bottom: 10px;">report2</a>
 		<a class="btn btn-primary"  href="{% url 'attendece_rep2' %}" style="font-size: 20px; margin-bottom: 10px;">report3</a>
