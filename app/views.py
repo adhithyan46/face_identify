@@ -61,9 +61,8 @@ def identify1(frame, name, buf, buf_length, known_conf):
         except:
             pass
 
-        # @login_required(login_url='/app/login/')
 
-
+# @login_required(login_url='/app/login/')
 def identify2(frame1, name1, buf1, buf_length1, known_conf1):
     if name1 in cache1:
         return
@@ -84,9 +83,7 @@ def identify2(frame1, name1, buf1, buf_length1, known_conf1):
         except:
             pass
 
-        # @login_required(login_url='/app/login/')
-
-
+# @login_required(login_url='/app/login/')
 def predict(rgb_frame, knn_clf=None, model_path=None, distance_threshold=0.5):
     if knn_clf is None and model_path is None:
         raise Exception("Must supply knn classifier either thourgh knn_clf or model_path")
@@ -119,7 +116,7 @@ def predict(rgb_frame, knn_clf=None, model_path=None, distance_threshold=0.5):
 from datetime import date
 
 
-@login_required(login_url='/app/login/')
+#@login_required(login_url='/app/login/')
 def identify_faces(video_capture1, video_capture2):
     buf_length = 10
     known_conf = 6
@@ -290,7 +287,7 @@ def identify(request):
     return HttpResponseRedirect(reverse('index'))
 
 
-# @login_required(login_url='/app/login/')
+@login_required(login_url='/app/login/')
 def admin(request):
     return redirect(request, 'admin:index')
 @login_required(login_url='/app/login/')
@@ -531,7 +528,7 @@ def login_view(request):
 def home(request):
     return render(request, 'app/home.html')
 
-
+@login_required(login_url='/app/login/')
 def add_emp(request):
     form1 = LoginRegister()
     form2 = EmployeeForm()
@@ -551,12 +548,12 @@ def add_emp(request):
     return render(request, 'app/add_emp.html', {'form1': form1, 'form2': form2})
 
 
-
+@login_required(login_url='/app/login/')
 def Content_admin(request):
     n = Content.objects.all()
     return render(request, 'admintemp/content.html', {'Content': n})
 
-
+@login_required(login_url='/app/login/')
 def reply_Content(request, id):
     content = Content.objects.get(id=id)
     if request.method == 'POST':
@@ -808,7 +805,7 @@ def attendance_by_name(request):
 
     return render(request, 'app/report_name.html', context)
 
-
+@login_required(login_url='/app/login/')
 def employee_view(request):
     n = Employee.objects.all()
     userFilter = EmployeeFilter(request.GET, queryset=n)
