@@ -32,7 +32,7 @@ import datetime
 from cachetools import TTLCache
 from django.contrib import messages
 from django.http import FileResponse
-import io
+from io import BytesIO
 import os
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -468,6 +468,19 @@ def attendece_rep2(request):
             'end_date': end_date_formatted,
             'report': report,
         }
+
+        if 'generate_pdf' in request.GET:
+            # Generate PDF
+            html_string = render_to_string('app/attendece_rep2.html', context)
+            result=BytesIO()
+            pdf = pisa.pisaDocument(BytesIO(html_string.encode("UTF-8")), result)
+
+            # Create HTTP response with PDF attachment
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
+            response.write(result.getvalue())
+
+            return response
 
     return render(request, 'app/attendece_rep2.html', context)
 
