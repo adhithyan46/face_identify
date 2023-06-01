@@ -293,58 +293,60 @@ def admin(request):
 @login_required(login_url='/app/login/')
 def attendece_rep(request):
     if request.method == 'GET':
-        date_formatted = datetime.datetime.today().date()
         date = request.GET.get('search_box', None)
-        if date is not None:
+        if date is not None and date != '':  # Check if date is selected and not empty
             date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
 
-        det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
-        det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
-        report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+            det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
+            det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+            report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
 
-        attendance_data = []
+            attendance_data = []
 
-        # Process Detected_out entries
-        for det_out in det_list_out:
-            matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id)
-            if matching_det_in.exists():
-                det_in = matching_det_in.first()
-                total_time = det_out.out - det_in.entry
-                total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
-                attendance_data.append({
-                    'employee_id': det_out.emp_id_id,
-                    'employee_name': det_out.emp_id,
-                    'entry_time': det_in.entry,
-                    'exit_time': det_out.out,
-                    'total_time': total_time_str,
-                })
-            else:
-                attendance_data.append({
-                    'employee_id': det_out.emp_id_id,
-                    'employee_name': det_out.emp_id,
-                    'entry_time': None,
-                    'exit_time': det_out.out,
-                    'total_time': None,
-                })
+            # Process Detected_out entries
+            for det_out in det_list_out:
+                matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id)
+                if matching_det_in.exists():
+                    det_in = matching_det_in.first()
+                    total_time = det_out.out - det_in.entry
+                    total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+                    attendance_data.append({
+                        'employee_id': det_out.emp_id_id,
+                        'employee_name': det_out.emp_id,
+                        'entry_time': det_in.entry,
+                        'exit_time': det_out.out,
+                        'total_time': total_time_str,
+                    })
+                else:
+                    attendance_data.append({
+                        'employee_id': det_out.emp_id_id,
+                        'employee_name': det_out.emp_id,
+                        'entry_time': None,
+                        'exit_time': det_out.out,
+                        'total_time': None,
+                    })
 
-        # Process Detected_in entries without a corresponding Detected_out entry
-        for det_in in det_list_in:
-            if not det_list_out.filter(emp_id_id=det_in.emp_id_id).exists():
-                attendance_data.append({
-                    'employee_id': det_in.emp_id_id,
-                    'employee_name': det_in.emp_id,
-                    'entry_time': det_in.entry,
-                    'exit_time': None,
-                    'total_time': None,
-                })
+            # Process Detected_in entries without a corresponding Detected_out entry
+            for det_in in det_list_in:
+                if not det_list_out.filter(emp_id_id=det_in.emp_id_id).exists():
+                    attendance_data.append({
+                        'employee_id': det_in.emp_id_id,
+                        'employee_name': det_in.emp_id,
+                        'entry_time': det_in.entry,
+                        'exit_time': None,
+                        'total_time': None,
+                    })
 
-        context = {
-            'attendance_data': attendance_data,
-            'date': date_formatted,
-            'report': report,
-        }
+            context = {
+                'attendance_data': attendance_data,
+                'date': date_formatted,
+                'report': report,
+            }
+        else:
+            # Date is not selected or empty, no change occurs
+            context = {}
 
-    return render(request, 'app/attendencereport.html', context)
+        return render(request, 'app/attendencereport.html', context)
 @login_required(login_url='/app/login/')
 def reportt(request):
     if request.method == 'GET':
