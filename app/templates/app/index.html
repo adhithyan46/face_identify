@@ -42,6 +42,15 @@
 		<a class="btn btn-primary"  href="{% url 'admin:index' %}" style="font-size: 20px; margin-bottom: 10px;">admin panel</a>
 		<a class="btn btn-primary"  href="{% url 'login_view' %}" style="font-size: 20px; margin-bottom: 10px;">logout</a>
 	</div>
-	<h1>{{message}}</h1>
+<div class="container">
+  <div id="message-container">
+    <h1>{{message}}</h1>
+  </div>
 </div>
+<script>
+	setTimeout(function() {
+	    var messageContainer=document.getElementById('message-container');
+	    messageContainer.style.display='none';
+	}, 5000);
+</script>
 {% endblock %}
