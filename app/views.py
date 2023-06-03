@@ -450,6 +450,15 @@ def attendece_rep2(request):
                     'exit_time': det_out.out,
                     'total_time': total_time_str,
                 })
+            else:
+                attendance_data.append({
+                    'employee_id': det_out.emp_id_id,
+                    'employee_name': det_out.emp_id,
+                    'entry_time': None,
+                    'exit_time': det_out.out,
+                    'total_time': None,
+
+                })
 
         # Process Detected_in entries without a corresponding Detected_out entry
         for det_in in det_list_in:
