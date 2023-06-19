@@ -76,6 +76,17 @@ WSGI_APPLICATION = 'face_rec_django.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
+# import psycopg2
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'your_database_name',
+#         'USER': 'your_username',
+#         'PASSWORD': 'your_password',
+#         'HOST': 'your_host',
+#         'PORT': 'your_port',
+#     }
+# }
 
 DATABASES = {
     'default': {

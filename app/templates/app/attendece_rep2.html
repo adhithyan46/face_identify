@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
+
 {% block css %}
 <style>
-
     #myInput {
       background-image: url('/static/css/searchicon.png');
       background-position: 10px 10px;
@@ -22,7 +22,8 @@
       font-size: 18px;
     }
 
-    #myTable th, #myTable td {
+    #myTable th,
+    #myTable td {
       text-align: left;
       padding: 12px;
     }
@@ -31,15 +32,31 @@
       border-bottom: 1px solid #ddd;
     }
 
-    #myTable tr.header, #myTable tr:hover {
+    #myTable tr.header,
+    #myTable tr:hover {
       background-color: #f1f1f1;
     }
-</style>
 
+    /* Styles for printing */
+    @media print {
+      #myTable {
+        page-break-inside: auto;
+      }
+      #myTable tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+      #myTable th,
+      #myTable td {
+        font-size: 14px;
+      }
+    }
+</style>
 {% endblock %}
+
 {% block content %}
 <div class="container" style="background-color: white; padding: 50px;">
-  	<a class="btn btn-primary"  href="{% url 'index' %}" style="font-size: 20px; margin-bottom: 10px;">Go back</a>
+  <a class="btn btn-primary" href="{% url 'index' %}" style="font-size: 20px; margin-bottom: 10px;">Go back</a>
   <form method="get" action="." style="margin: 0">
     <label for="start_date">Start Date:</label>
     <input type="date" id="start_date" name="start_date" value="{{ start_date|default:'' }}">
@@ -58,6 +75,7 @@
   <br>
 
   <table id="myTable">
+    <caption>Attendance Report</caption>
     <thead>
       <tr>
         <th>Employee ID</th>
@@ -86,23 +104,23 @@
 </div>
 
 <script>
-    function myFunction() {
-  var input, filter, table, tr, td, i, txtValue;
-  input = document.getElementById("myInput");
-  filter = input.value.toUpperCase();
-  table = document.getElementById("myTable");
-  tr = table.getElementsByTagName("tr");
-  for (i = 0; i < tr.length; i++) {
-    td = tr[i].getElementsByTagName("td")[1];
-    if (td) {
-      txtValue = td.textContent || td.innerText;
-      if (txtValue.toUpperCase().indexOf(filter) > -1) {
-        tr[i].style.display = "";
-      } else {
-        tr[i].style.display = "none";
+  function myFunction() {
+    var input, filter, table, tr, td, i, txtValue;
+    input = document.getElementById("myInput");
+    filter = input.value.toUpperCase();
+    table = document.getElementById("myTable");
+    tr = table.getElementsByTagName("tr");
+    for (i = 0; i < tr.length; i++) {
+      td = tr[i].getElementsByTagName("td")[1];
+      if (td) {
+        txtValue = td.textContent || td.innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+          tr[i].style.display = "";
+        } else {
+          tr[i].style.display = "none";
+        }
       }
     }
   }
-}
 </script>
 {% endblock %}
