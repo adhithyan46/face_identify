@@ -429,9 +429,75 @@ from io import BytesIO
 import datetime
 from xhtml2pdf import pisa
 
-@login_required(login_url='/app/login/')
+# @login_required(login_url='/app/login/')
+# def attendece_rep2(request):
+#     if request.method == 'GET':
+#         start_date = request.GET.get('start_date', None)
+#         end_date = request.GET.get('end_date', None)
+#
+#         if start_date is not None and end_date is not None and start_date != '' and end_date != '':
+#             start_date_formatted = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+#             end_date_formatted = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+#
+#             det_list_out = Detected_out.objects.filter(out__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
+#             det_list_in = Detected_in.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
+#             report = Rep.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
+#
+#             attendance_data = []
+#
+#             for det_out in det_list_out:
+#                 matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id, entry__date=det_out.out.date())
+#                 if matching_det_in.exists():
+#                     det_in = matching_det_in.first()
+#                     total_time = det_out.out - det_in.entry
+#                     total_time_str = str(datetime.timedelta(seconds=total_time.total_seconds()))
+#                     attendance_data.append({
+#                         'employee_id': det_out.emp_id_id,
+#                         'employee_name': det_out.emp_id,
+#                         'entry_time': det_in.entry.strftime("%B %d, %Y, %I:%M %p"),
+#                         'exit_time': det_out.out.strftime("%B %d, %Y, %I:%M %p"),
+#                         'total_time': total_time_str,
+#                     })
+#                     det_list_in = det_list_in.exclude(pk=det_in.pk)
+#                 else:
+#                     attendance_data.append({
+#                         'employee_id': det_out.emp_id_id,
+#                         'employee_name': det_out.emp_id,
+#                         'entry_time': None,
+#                         'exit_time': det_out.out.strftime("%B %d, %Y, %I:%M %p"),
+#                         'total_time': None,
+#                     })
+#
+#             for det_in in det_list_in:
+#                 attendance_data.append({
+#                     'employee_id': det_in.emp_id_id,
+#                     'employee_name': det_in.emp_id,
+#                     'entry_time': det_in.entry.strftime("%B %d, %Y, %I:%M %p"),
+#                     'exit_time': None,
+#                     'total_time': None,
+#                 })
+#
+#             # Sort the attendance data by date in ascending order
+#             attendance_data.sort(key=lambda x: x['entry_time'] or x['exit_time'])
+#
+#             context = {
+#                 'attendance_data': attendance_data,
+#                 'start_date': start_date_formatted,
+#                 'end_date': end_date_formatted,
+#                 'report': report,
+#             }
+#         else:
+#             context = {}
+#         if 'generate_pdf' in request.GET:
+#             template = get_template('app/attendece_rep2.html')
+#             html = template.render(context)
+#             response = HttpResponse(content_type='application/pdf')
+#             response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
+#             pisa.CreatePDF(html, dest=response)
+#             return response
+#
+#         return render(request, 'app/attendece_rep2.html', context)
 def attendece_rep2(request):
-    attendance_data=[]
     if request.method == 'GET':
         start_date = request.GET.get('start_date', None)
         end_date = request.GET.get('end_date', None)
@@ -440,9 +506,9 @@ def attendece_rep2(request):
             start_date_formatted = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
             end_date_formatted = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
 
-            det_list_out = Detected_out.objects.filter(out__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
-            det_list_in = Detected_in.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
-            report = Rep.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
+            det_list_out = Detected_out.objects.filter(out__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id')
+            det_list_in = Detected_in.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id')
+            report = Rep.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id')
 
             attendance_data = []
 
@@ -479,7 +545,9 @@ def attendece_rep2(request):
                 })
 
             # Sort the attendance data by date in ascending order
-            attendance_data.sort(key=lambda x: x['entry_time'] or x['exit_time'])
+            # attendance_data.sort(key=lambda x: (x['entry_time'] or x['exit_time'],x['employee_id']))
+            attendance_data.sort(key=lambda x: (datetime.datetime.strptime(x['entry_time'], "%B %d, %Y, %I:%M %p") if x[
+                'entry_time'] else datetime.datetime.strptime(x['exit_time'], "%B %d, %Y, %I:%M %p")))
 
             context = {
                 'attendance_data': attendance_data,
@@ -489,104 +557,15 @@ def attendece_rep2(request):
             }
         else:
             context = {}
-
         if 'generate_pdf' in request.GET:
             template = get_template('app/attendece_rep2.html')
-            context['attendance_data'] = attendance_data  # Add attendance_data to the context
-
-            html_string = template.render(context)
-            result = BytesIO()
-            pdf = pisa.pisaDocument(BytesIO(html_string.encode("UTF-8")), result)
-            if not pdf.err:
-                response = HttpResponse(content_type='application/pdf')
-                response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
-                response.write(result.getvalue())
-                return response
+            html = template.render(context)
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
+            pisa.CreatePDF(html, dest=response)
+            return response
 
         return render(request, 'app/attendece_rep2.html', context)
-
-
-# @login_required(login_url='/app/login/')
-# def attendece_rep2(request):
-#     if request.method == 'GET':
-#         start_date = request.GET.get('start_date', None)
-#         end_date = request.GET.get('end_date', None)
-#
-#         if start_date is not None and end_date is not None and start_date != '' and end_date != '':
-#             start_date_formatted = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
-#             end_date_formatted = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
-#
-#             det_list_out = Detected_out.objects.filter(out__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
-#             det_list_in = Detected_in.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
-#             report = Rep.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
-#
-#             attendance_data = []
-#
-#             for det_out in det_list_out:
-#                 matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id, entry__lte=det_out.out)
-#                 if matching_det_in.exists():
-#                     det_in = matching_det_in.first()
-#                     total_time = det_out.out - det_in.entry
-#                     total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
-#                     attendance_data.append({
-#                         'employee_id': det_out.emp_id_id,
-#                         'employee_name': det_out.emp_id,
-#                         'entry_time': det_in.entry,
-#                         'exit_time': det_out.out,
-#                         'total_time': total_time_str,
-#                     })
-#                     det_list_in = det_list_in.exclude(pk=det_in.pk)
-#                 else:
-#                     attendance_data.append({
-#                         'employee_id': det_out.emp_id_id,
-#                         'employee_name': det_out.emp_id,
-#                         'entry_time': None,
-#                         'exit_time': det_out.out,
-#                         'total_time': None,
-#                     })
-#
-#             for det_in in det_list_in:
-#                 attendance_data.append({
-#                     'employee_id': det_in.emp_id_id,
-#                     'employee_name': det_in.emp_id,
-#                     'entry_time': det_in.entry,
-#                     'exit_time': None,
-#                     'total_time': None,
-#                 })
-#
-#             # Sort the attendance data by date in ascending order
-#             attendance_data.sort(key=lambda x: x['entry_time'] or x['exit_time'])
-#
-#             context = {
-#                 'attendance_data': attendance_data,
-#                 'start_date': start_date_formatted,
-#                 'end_date': end_date_formatted,
-#                 'report': report,
-#             }
-#             if 'generate_pdf' in request.GET:
-#                 html_string = render_to_string('app/attendece_rep2.html', context)
-#                 result = BytesIO()
-#                 pdf = pisa.pisaDocument(BytesIO(html_string.encode("UTF-8")), result)
-#                 response = HttpResponse(content_type='application/pdf')
-#                 response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
-#                 response.write(result.getvalue())
-#                 return response
-#
-#         else:
-#             context={}
-#             if 'generate_pdf' in request.GET:
-#                 html_string = render_to_string('app/attendece_rep2.html', context)
-#                 result = BytesIO()
-#                 pdf = pisa.pisaDocument(BytesIO(html_string.encode("UTF-8")), result)
-#                 response = HttpResponse(content_type='application/pdf')
-#                 response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
-#                 response.write(result.getvalue())
-#                 return response
-#         # else:
-#         #     # Start date or end date is not selected or empty, no change occurs
-#         #     context = {}
-#
-#         return render(request, 'app/attendece_rep2.html', context)
 
 
 
