@@ -372,7 +372,6 @@ from django.db.models import Max, Min
 from django.db.models import Max, Min
 
 from django.db.models import Max, Min
-
 @login_required(login_url='/app/login/')
 def attendece_rep2(request):
     if request.method == 'GET':
@@ -428,6 +427,9 @@ def attendece_rep2(request):
                             'exit_time': det_out.out,
                             'total_time': None,
                         })
+
+            # Sort attendance data by date
+            attendance_data.sort(key=lambda x: x['date'])
 
             context = {
                 'attendance_data': attendance_data,
