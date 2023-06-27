@@ -443,7 +443,17 @@ def attendece_rep2(request):
         # Handle GET request with initial date range selection form
         context = {}
 
+
     return render(request, 'app/attendece_rep2.html', context)
+
+
+
+import io
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from .models import Detected_in, Detected_out
+import datetime
 
 # @login_required(login_url='/app/login/')
 # def attendece_rep2(request):
@@ -454,52 +464,74 @@ def attendece_rep2(request):
 #             start_date_formatted = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
 #             end_date_formatted = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
 #
-#             det_list_out = Detected_out.objects.filter(out__date__range=(start_date_formatted, end_date_formatted)).order_by('emp_id_id').reverse()
-#             det_list_in = Detected_in.objects.filter(entry__date__range=(start_date_formatted, end_date_formatted)).order_by('emp_id_id').reverse()
-#             report = Rep.objects.filter(entry__date__range=(start_date_formatted, end_date_formatted)).order_by('emp_id_id').reverse()
-#
 #             attendance_data = []
 #
-#             # Process Detected_out entries
-#             for det_out in det_list_out:
-#                 matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id)
-#                 if matching_det_in.exists():
-#                     det_in = matching_det_in.first()
-#                     total_time = det_out.out - det_in.entry
-#                     total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
-#                     attendance_data.append({
-#                         'employee_id': det_out.emp_id_id,
-#                         'employee_name': det_out.emp_id,
-#                         'entry_time': det_in.entry,
-#                         'exit_time': det_out.out,
-#                         'total_time': total_time_str,
-#                     })
-#                 else:
-#                     attendance_data.append({
-#                         'employee_id': det_out.emp_id_id,
-#                         'employee_name': det_out.emp_id,
-#                         'entry_time': None,
-#                         'exit_time': det_out.out,
-#                         'total_time': None,
-#                     })
+#             # Retrieve the distinct employees present in the date range
+#             distinct_employees = Detected_in.objects.filter(entry__date__range=(start_date_formatted, end_date_formatted)).values_list('emp_id_id', flat=True).distinct()
 #
-#             # Process Detected_in entries without a corresponding Detected_out entry
-#             for det_in in det_list_in:
-#                 if not det_list_out.filter(emp_id_id=det_in.emp_id_id).exists():
-#                     attendance_data.append({
-#                         'employee_id': det_in.emp_id_id,
-#                         'employee_name': det_in.emp_id,
-#                         'entry_time': det_in.entry,
-#                         'exit_time': None,
-#                         'total_time': None,
-#                     })
+#             # Process each employee and date
+#             for emp_id in distinct_employees:
+#                 det_list_in = Detected_in.objects.filter(emp_id_id=emp_id, entry__date__range=(start_date_formatted, end_date_formatted))
+#                 det_list_out = Detected_out.objects.filter(emp_id_id=emp_id, out__date__range=(start_date_formatted, end_date_formatted))
+#
+#                 date_range = set(det_list_in.values_list('entry__date', flat=True)) | set(det_list_out.values_list('out__date', flat=True))
+#
+#                 # Process each date for the employee
+#                 for date in sorted(date_range):
+#                     det_in = det_list_in.filter(entry__date=date).order_by('entry').first()
+#                     det_out = det_list_out.filter(out__date=date).order_by('out').last()
+#
+#                     if det_in and det_out:
+#                         total_time = det_out.out - det_in.entry
+#                         total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+#                         attendance_data.append({
+#                             'employee_id': emp_id,
+#                             'employee_name': det_in.emp_id,
+#                             'date': date,
+#                             'entry_time': det_in.entry,
+#                             'exit_time': det_out.out,
+#                             'total_time': total_time_str,
+#                         })
+#                     elif det_in:
+#                         attendance_data.append({
+#                             'employee_id': emp_id,
+#                             'employee_name': det_in.emp_id,
+#                             'date': date,
+#                             'entry_time': det_in.entry,
+#                             'exit_time': None,
+#                             'total_time': None,
+#                         })
+#                     elif det_out:
+#                         attendance_data.append({
+#                             'employee_id': emp_id,
+#                             'employee_name': det_out.emp_id,
+#                             'date': date,
+#                             'entry_time': None,
+#                             'exit_time': det_out.out,
+#                             'total_time': None,
+#                         })
+#
+#             # Sort attendance data by date
+#             attendance_data.sort(key=lambda x: x['date'])
 #
 #             context = {
 #                 'attendance_data': attendance_data,
 #                 'start_date': start_date_formatted,
 #                 'end_date': end_date_formatted,
-#                 'report': report,
 #             }
+#
+#             # Get the template
+#             template = get_template('app/attendece_rep2.html')
+#             html = template.render(context)
+#
+#             # Create a PDF object
+#             response = HttpResponse(content_type='application/pdf')
+#             response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
+#
+#             # Generate the PDF
+#             pisa.CreatePDF(html, dest=response, link_callback=fetch_resources)
+#
+#             return response
 #         else:
 #             # Dates are not selected or empty, no change occurs
 #             context = {}
@@ -508,211 +540,6 @@ def attendece_rep2(request):
 #         context = {}
 #
 #     return render(request, 'app/attendece_rep2.html', context)
-# def attendece_rep2(request):
-#     if request.method == 'GET':
-#         start_date = request.GET.get('start_date', None)
-#         end_date = request.GET.get('end_date', None)
-#
-#         if start_date is not None and end_date is not None and start_date != '' and end_date != '':
-#             start_date_formatted = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
-#             end_date_formatted = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
-#
-#             det_list_out = Detected_out.objects.filter(out__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id')
-#             det_list_in = Detected_in.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id')
-#             report = Rep.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id')
-#
-#             attendance_data = []
-#
-#             for det_out in det_list_out:
-#                 matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id, entry__date=det_out.out.date())
-#                 if matching_det_in.exists():
-#                     det_in = matching_det_in.first()
-#                     total_time = det_out.out - det_in.entry
-#                     total_time_str = str(datetime.timedelta(seconds=total_time.total_seconds()))
-#                     attendance_data.append({
-#                         'employee_id': det_out.emp_id_id,
-#                         'employee_name': det_out.emp_id,
-#                         'entry_time': det_in.entry.strftime("%B %d, %Y, %I:%M %p"),
-#                         'exit_time': det_out.out.strftime("%B %d, %Y, %I:%M %p"),
-#                         'total_time': total_time_str,
-#                     })
-#                     det_list_in = det_list_in.exclude(pk=det_in.pk)
-#                 else:
-#                     attendance_data.append({
-#                         'employee_id': det_out.emp_id_id,
-#                         'employee_name': det_out.emp_id,
-#                         'entry_time': None,
-#                         'exit_time': det_out.out.strftime("%B %d, %Y, %I:%M %p"),
-#                         'total_time': None,
-#                     })
-#
-#             for det_in in det_list_in:
-#                 attendance_data.append({
-#                     'employee_id': det_in.emp_id_id,
-#                     'employee_name': det_in.emp_id,
-#                     'entry_time': det_in.entry.strftime("%B %d, %Y, %I:%M %p"),
-#                     'exit_time': None,
-#                     'total_time': None,
-#                 })
-#
-#             # Sort the attendance data by date in ascending order
-#             # attendance_data.sort(key=lambda x: (x['entry_time'] or x['exit_time'],x['employee_id']))
-#             attendance_data.sort(key=lambda x: (datetime.datetime.strptime(x['entry_time'], "%B %d, %Y, %I:%M %p") if x[
-#                 'entry_time'] else datetime.datetime.strptime(x['exit_time'], "%B %d, %Y, %I:%M %p")))
-#
-#             context = {
-#                 'attendance_data': attendance_data,
-#                 'start_date': start_date_formatted,
-#                 'end_date': end_date_formatted,
-#                 'report': report,
-#             }
-#         else:
-#             context = {}
-#         if 'generate_pdf' in request.GET:
-#             template = get_template('app/attendece_rep2.html')
-#             html = template.render(context)
-#             response = HttpResponse(content_type='application/pdf')
-#             response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
-#             pisa.CreatePDF(html, dest=response)
-#             return response
-#
-#         return render(request, 'app/attendece_rep2.html', context)
-# @login_required(login_url='/app/login/')
-# def attendece_rep(request):
-#     if request.method == 'GET':
-#         date = request.GET.get('search_box', None)
-#         if date is not None and date != '':  # Check if date is selected and not empty
-#             date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-#
-#             det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
-#             det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
-#             report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
-#
-#             attendance_data = []
-#
-#             # Process Detected_out entries
-#             for det_out in det_list_out:
-#                 matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id)
-#                 if matching_det_in.exists():
-#                     det_in = matching_det_in.first()
-#                     total_time = det_out.out - det_in.entry
-#                     total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
-#                     attendance_data.append({
-#                         'employee_id': det_out.emp_id_id,
-#                         'employee_name': det_out.emp_id,
-#                         'entry_time': det_in.entry.strftime("%B %d, %Y, %I:%M %p"),
-#                         'exit_time': det_out.out.strftime("%B %d, %Y, %I:%M %p"),
-#                         'total_time': total_time_str,
-#                     })
-#                 else:
-#                     attendance_data.append({
-#                         'employee_id': det_out.emp_id_id,
-#                         'employee_name': det_out.emp_id,
-#                         'entry_time': None,
-#                         'exit_time': det_out.out.strftime("%B %d, %Y, %I:%M %p"),
-#                         'total_time': None,
-#                     })
-#
-#             # Process Detected_in entries without a corresponding Detected_out entry
-#             for det_in in det_list_in:
-#                 if not det_list_out.filter(emp_id_id=det_in.emp_id_id).exists():
-#                     attendance_data.append({
-#                         'employee_id': det_in.emp_id_id,
-#                         'employee_name': det_in.emp_id,
-#                         'entry_time': det_in.entry.strftime("%B %d, %Y, %I:%M %p"),
-#                         'exit_time': None,
-#                         'total_time': None,
-#                     })
-#
-#             context = {
-#                 'attendance_data': attendance_data,
-#                 'date': date_formatted,
-#                 'report': report,
-#             }
-#         else:
-#             # Date is not selected or empty, no change occurs
-#             context = {}
-#
-#         return render(request, 'app/attendencereport.html', context)
-
-# def attendece_rep2(request):
-#     if request.method == 'GET':
-#         start_date = request.GET.get('start_date', None)
-#         end_date = request.GET.get('end_date', None)
-#
-#         if start_date is not None and end_date is not None and start_date != '' and end_date != '':
-#             start_date_formatted = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
-#             end_date_formatted = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
-#
-#             det_list_out = Detected_out.objects.filter(out__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
-#             det_list_in = Detected_in.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
-#             report = Rep.objects.filter(entry__date__range=[start_date_formatted, end_date_formatted]).order_by('emp_id_id').reverse()
-#
-#             attendance_data = []
-#             processed_dates = set()
-#
-#             for det_out in det_list_out:
-#                 exit_date = det_out.out.date()
-#
-#                 if exit_date in processed_dates:
-#                     continue
-#
-#                 matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id, entry__date=exit_date)
-#                 if matching_det_in.exists():
-#                     det_in = matching_det_in.first()
-#                     total_time = det_out.out - det_in.entry
-#                     total_time_str = str(datetime.timedelta(seconds=total_time.total_seconds()))
-#                     attendance_data.append({
-#                         'employee_id': det_out.emp_id_id,
-#                         'employee_name': det_out.emp_id,
-#                         'entry_time': det_in.entry.strftime("%B %d, %Y, %I:%M %p"),
-#                         'exit_time': det_out.out.strftime("%B %d, %Y, %I:%M %p"),
-#                         'total_time': total_time_str,
-#                     })
-#                     det_list_in = det_list_in.exclude(pk=det_in.pk)
-#                 else:
-#                     attendance_data.append({
-#                         'employee_id': det_out.emp_id_id,
-#                         'employee_name': det_out.emp_id,
-#                         'entry_time': None,
-#                         'exit_time': det_out.out.strftime("%B %d, %Y, %I:%M %p"),
-#                         'total_time': None,
-#                     })
-#
-#                 processed_dates.add(exit_date)
-#
-#             for det_in in det_list_in:
-#                 attendance_data.append({
-#                     'employee_id': det_in.emp_id_id,
-#                     'employee_name': det_in.emp_id,
-#                     'entry_time': det_in.entry.strftime("%B %d, %Y, %I:%M %p"),
-#                     'exit_time': None,
-#                     'total_time': None,
-#                 })
-#
-#             # Sort the attendance data by date in ascending order
-#             attendance_data.sort(key=lambda x: (datetime.datetime.strptime(x['entry_time'], "%B %d, %Y, %I:%M %p") if x['entry_time'] else datetime.datetime.strptime(x['exit_time'], "%B %d, %Y, %I:%M %p")))
-#
-#             context = {
-#                 'attendance_data': attendance_data,
-#                 'start_date': start_date_formatted,
-#                 'end_date': end_date_formatted,
-#                 'report': report,
-#             }
-#         else:
-#             context = {}
-#
-#         if 'generate_pdf' in request.GET:
-#             template = get_template('app/attendece_rep2.html')
-#             html = template.render(context)
-#             response = HttpResponse(content_type='application/pdf')
-#             response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
-#             pisa.CreatePDF(html, dest=response)
-#             return response
-#
-#         return render(request, 'app/attendece_rep2.html', context)
-
-
 
 @login_required(login_url='/app/login/')
 def person(request):
