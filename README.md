@@ -1,4 +1,5 @@
 # Employee Face Recognition System
+Acknoledgments : Screehari ( AI Developer ) | Mohammed Irfan ( Python Developer ) | Arun ( AI Developer ) 
 
 The face recogntion system is used to train the faces of employees and detect them when they walk past the camera.
 It can be used as an attendence system for the employees.

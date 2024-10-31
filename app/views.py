@@ -233,18 +233,18 @@ def identify_faces(video_capture1, video_capture2):
     cv2.destroyAllWindows()
 
 
-@login_required(login_url='/app/login/')
+# @login_required(login_url='/app/login/')
 def index(request):
     return render(request, 'app/index.html')
 
 
-@login_required(login_url='/app/login/')
+# @login_required(login_url='/app/login/')
 def video_stream(request):
     stream()
     return HttpResponseRedirect(reverse('index'))
 
 
-@login_required(login_url='/app/login/')
+# @login_required(login_url='/app/login/')
 def train_model(request):
     # message = "Training in progress. Please wait..."
     trainer()
@@ -253,7 +253,7 @@ def train_model(request):
     # return HttpResponseRedirect(reverse('index'))
 
 
-@login_required(login_url='/app/login/')
+# @login_required(login_url='/app/login/')
 def detected(request):
     if request.method == 'GET':
         date_formatted = datetime.datetime.today().date()
@@ -266,7 +266,7 @@ def detected(request):
     return render(request, 'app/detected.html', {'det_list': det_list, 'date': date_formatted})
 
 
-@login_required(login_url='/app/login/')
+# @login_required(login_url='/app/login/')
 def detected_out(request):
     if request.method == 'GET':
         date_formatted = datetime.datetime.today().date()
@@ -290,7 +290,7 @@ def identify(request):
 # @login_required(login_url='/app/login/')
 def admin(request):
     return redirect(request, 'admin:index')
-@login_required(login_url='/app/login/')
+# @login_required(login_url='/app/login/')
 def attendece_rep(request):
     if request.method == 'GET':
         date = request.GET.get('search_box', None)
@@ -372,7 +372,11 @@ from django.db.models import Max, Min
 from django.db.models import Max, Min
 
 from django.db.models import Max, Min
-@login_required(login_url='/app/login/')
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+
+
+# @login_required(login_url='/app/login/')
 def attendece_rep2(request):
     if request.method == 'GET':
         start_date = request.GET.get('start_date', None)
@@ -439,6 +443,23 @@ def attendece_rep2(request):
         else:
             # Dates are not selected or empty, no change occurs
             context = {}
+        if 'generate_pdf' in request.GET:
+            # Generate PDF
+            template = get_template('app/attendece_rep2.html')
+            html = template.render(context)
+            result = BytesIO()
+
+            # Convert HTML to PDF
+            pisaStatus = pisa.CreatePDF(html, dest=result)
+            if pisaStatus.err:
+                return HttpResponse('Error generating PDF')
+
+            # Create HTTP response with PDF attachment
+            response = HttpResponse(result.getvalue(), content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="attendence_report2.pdf"'
+
+            return response
+
     else:
         # Handle GET request with initial date range selection form
         context = {}
@@ -541,7 +562,7 @@ import datetime
 #
 #     return render(request, 'app/attendece_rep2.html', context)
 
-@login_required(login_url='/app/login/')
+# @login_required(login_url='/app/login/')
 def person(request):
     if request.method == 'POST':
         date_formatted = datetime.datetime.today().date()
@@ -567,7 +588,7 @@ def person(request):
                    'report_in': report_in, 'report_out': report_out})
 
 
-@login_required(login_url='/app/login/')
+# @login_required(login_url='/app/login/')
 def logout_view(request):
     logout(request)
     return redirect('login_view')
@@ -576,7 +597,7 @@ def logout_view(request):
 from django.contrib.auth import authenticate, login
 
 
-@login_required(login_url='/app/login/')
+# @login_required(login_url='/app/login/')
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('user')
@@ -599,7 +620,7 @@ def login_view(request):
 def home(request):
     return render(request, 'app/home.html')
 
-@login_required(login_url='/app/login/')
+# @login_required(login_url='/app/login/')
 def add_emp(request):
     form1 = LoginRegister()
     form2 = EmployeeForm()
@@ -619,12 +640,10 @@ def add_emp(request):
     return render(request, 'app/add_emp.html', {'form1': form1, 'form2': form2})
 
 
-@login_required(login_url='/app/login/')
 def Content_admin(request):
     n = Content.objects.all()
     return render(request, 'admintemp/content.html', {'Content': n})
 
-@login_required(login_url='/app/login/')
 def reply_Content(request, id):
     content = Content.objects.get(id=id)
     if request.method == 'POST':
@@ -876,7 +895,7 @@ def attendance_by_name(request):
 
     return render(request, 'app/report_name.html', context)
 
-@login_required(login_url='/app/login/')
+# @login_required(login_url='/app/login/')
 def employee_view(request):
     n = Employee.objects.all()
     userFilter = EmployeeFilter(request.GET, queryset=n)
