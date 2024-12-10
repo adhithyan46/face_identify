@@ -75,6 +75,7 @@ def identify_faces(video_capture):
     while True:
         # Grab a single frame of video
         ret, frame = video_capture.read()
+        frame = cv2.flip(frame,1)
 
         # Resize frame of video to 1/4 size for faster face recognition processing
         small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
@@ -103,7 +104,7 @@ def identify_faces(video_capture):
             # Draw a label with a name below the face
             cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
             font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+            cv2.putText(frame, name, (left , bottom - 35), font, 0.5, (255, 255, 255), 1)
 
             identify1(frame, name, buf, buf_length, known_conf)
 

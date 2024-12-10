@@ -35,13 +35,21 @@ from django.http import FileResponse
 from io import BytesIO
 import os
 from django.core.exceptions import ObjectDoesNotExist
+from .tracker import *
+import numpy as np
+from collections import defaultdict
 
 cache = TTLCache(maxsize=20, ttl=60)
 cache1 = TTLCache(maxsize=20, ttl=60)
 
-
+area1 = [(470,83), (470, 386), (289, 386), (289, 83)]
+area2 = [(274,83),(274, 386) ,(167, 386), (167, 83)]
+people_in_area = defaultdict(int)
+people_entering = {}
+people_exiting = {}
 # @login_required(login_url='/app/login/')
-def identify1(frame, name, buf, buf_length, known_conf):
+ 
+def identify1(frame, name, buf, buf_length, known_conf,tracker_id):
     if name in cache:
         return
     count = 0
@@ -50,11 +58,14 @@ def identify1(frame, name, buf, buf_length, known_conf):
 
     if count >= known_conf:
         entry = datetime.datetime.now(tz=timezone.utc)
-        print(name, entry)
-        cache[name] = 'detected'
-        path = 'detected/{}_{}.jpg'.format(name, entry)
-        write_path = 'media/' + path
-        cv2.imwrite(write_path, frame)
+        print(f"{name} detected at {entry}, Tracker ID :{tracker_id}")
+        # cache[name] = 'detected'
+        cache[tracker_id] = 'detected'
+        # path = 'detected/{}_{}.jpg'.format(name, entry)
+        path = f'detected/{name}_{entry}.jpg'
+        # write_path = 'media/' + path
+        
+        cv2.imwrite(path, frame)
         try:
             emp = Employee.objects.get(name=name)
             emp.detected_in_set.create(entry=entry, photo=path)
@@ -87,13 +98,13 @@ def identify2(frame1, name1, buf1, buf_length1, known_conf1):
 def predict(rgb_frame, knn_clf=None, model_path=None, distance_threshold=0.5):
     if knn_clf is None and model_path is None:
         raise Exception("Must supply knn classifier either thourgh knn_clf or model_path")
-
+ 
     # Load a trained KNN model (if one was passed in)
     if knn_clf is None:
         with open(model_path, 'rb') as f:
             knn_clf = pickle.load(f)
 
-    # Load image file and find face locations
+    # Load image file and find face locations 
     # X_img = face_recognition.load_image_file(X_img_path)
     X_face_locations = face_recognition.face_locations(rgb_frame, number_of_times_to_upsample=2)
 
@@ -114,123 +125,154 @@ def predict(rgb_frame, knn_clf=None, model_path=None, distance_threshold=0.5):
 
 
 from datetime import date
-
-
 #@login_required(login_url='/app/login/')
-def identify_faces(video_capture1, video_capture2):
+# mouse_coord = []
+# def mouse_coords(event,x,y,flags,params):
+  
+#     if event == cv2.EVENT_MOUSEMOVE:
+#         mouse_coord.append((x,y))
+#         print(x,y)
+        
+def identify_faces(video_capture1):
+    
     buf_length = 10
     known_conf = 6
     buf = [[]] * buf_length
     i = 0
+    
     buf_length1 = 10
     known_conf1 = 6
     buf1 = [[]] * buf_length1
     i1 = 0
 
+    # cv2.namedWindow('Video')
+    # cv2.setMouseCallback('Video',mouse_coords)
+    movement_tracker = {}
+    
     process_this_frame = True
-
     while True:
         # Grab a single frame of video
         try:
             ret, frame = video_capture1.read()
-            ret1, frame1 = video_capture2.read()
+            frame = cv2.flip(frame,1)
+            # ret1, frame1 = video_capture2.read()
         except Exception as e:
             print("Error reading frames:", str(e))
             break
-        if not ret or not ret1:
-            # Break the loop if frames cannot be read
-            break
+       
         try:
             # Resize frame of video to 1/4 size for faster face recognition processing
             small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-            small_frame1 = cv2.resize(frame1, (0, 0), fx=0.25, fy=0.25)
+            # small_frame1 = cv2.resize(frame1, (0, 0), fx=0.25, fy=0.25)
         except Exception as e:
             print("Error resizing frames:", str(e))
             break
 
         # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
         rgb_frame = numpy.ascontiguousarray(small_frame[:, :, ::-1])
-        rgb_frame1 = numpy.ascontiguousarray(small_frame1[:, :, ::-1])
+        # rgb_frame1 = numpy.ascontiguousarray(small_frame1[:, :, ::-1])
 
         if process_this_frame:
             predictions = predict(rgb_frame, model_path="app/facerec/models/trained_model.clf")
-            predictions1 = predict(rgb_frame1, model_path="app/facerec/models/trained_model.clf")
-            # print(predictions)
-
-        process_this_frame = not process_this_frame
+         
 
         face_names = []
-        face_names1 = []
-
+        face_names_exit = []
+        
         for name, (top, right, bottom, left) in predictions:
 
             top *= 4
             right *= 4
             bottom *= 4
             left *= 4
-
+            cv2.rectangle(frame,(left,top),(right,bottom),(0,0,255),2)            
             # Draw a box around the face
-            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-
+                
             # Draw a label with a name below the face
             cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
             font = cv2.FONT_HERSHEY_DUPLEX
             cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+            
+            # result_area1 = cv2.pointPolygonTest(np.array(area1,np.int32),(left ,top) ,False)
+            
+            # result_area2 = cv2.pointPolygonTest(np.array(area2,np.int32),(left ,top) ,False)
+            
+            # if result_area1 >= 0:
+            #     movement_tracker[name] = movement_tracker.get(name,[]) + ['area1']
+            #     print(f'{name} detected at area1')
+            # elif result_area2 >=0:
+            #     movement_tracker[name] = movement_tracker.get(name,[]) + ['area2']
+            #     print(f'{name} detected at area2')
 
-            identify1(frame, name, buf, buf_length, known_conf)
-
-            face_names.append(name)
-            # employee=Employee.objects.get(name=name)
-            # Attendance.objects.create(employee=employee,date=date.today(),present=True)
-            try:
-                employee = Employee.objects.get(name=name)
-                Attendance.objects.create(employee=employee, date=date.today(), present=True)
-            except ObjectDoesNotExist:
-                print(f"Employee with '{name}' does not exist in the database.")
-
-        for name1, (top, right, bottom, left) in predictions1:
-
-            top *= 4
-            right *= 4
-            bottom *= 4
-            left *= 4
-
-            # Draw a box around the face
-            cv2.rectangle(frame1, (left, top), (right, bottom), (0, 0, 255), 2)
-
-            # Draw a label with a name below the face           
-            cv2.rectangle(frame1, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
-            font1 = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(frame1, name1, (left + 6, bottom - 6), font1, 1.0, (255, 255, 255), 1)
-
-            identify2(frame1, name1, buf1, buf_length1, known_conf1)
-
-            face_names1.append(name1)
-            try:
-                employee = Employee.objects.get(name=name1)
-                Attendance.objects.create(employee=employee, date=date.today(), present=True)
-            except ObjectDoesNotExist:
-                print(f"Employee with name '{name1}' does not exist in the database.")
-
+            # if movement_tracker.get(name) == ['area1' , 'area2']:
+            #     people_entering[name] = datetime.datetime.now()
+            #     # people_entering[name] += 1
+                
+            #     Detected_in.objects.create(name = name, entry = people_entering[name])
+            #     print(f'{name} entered the area at {people_entering[name]}')
+            #     movement_tracker[name] = []
+            # face_names.append(name)
+            
+            # if movement_tracker.get(name) == ['area2', 'area1']:
+            #     people_exiting[name] = datetime.datetime.now()
+                
+            #     Detected_out.objects.create(name = name, out = people_exiting[name])
+            #     print(f'{name} exited at {people_exiting[name]}')
+            #     movement_tracker[name] = []
+                
+            # face_names_exit.append(name)
+            #check for entry
+            
+            
+            
+            result_entry = cv2.pointPolygonTest(np.array(area1,np.int32),(left ,top) ,False)
+            if result_entry >=0:
+                if name not in people_entering:
+                    people_entering[name] = datetime.datetime.now()
+                    people_in_area[name] += 1
+            
+                    Detected_in.objects.create(name = name, entry = people_entering[name])
+                    
+                    print(f"{name} entered the area at {people_entering[name]}")
+            face_names.append(name)    
+              
+              
+              
+            result_exit = cv2.pointPolygonTest(np.array(area2,np.int32),(left,top),False)
+            if result_exit >=0:
+                if name in people_entering and name not in people_exiting:
+                    people_exiting[name] = datetime.datetime.now()                     
+                    Detected_out.objects.create(name = name, out = people_exiting[name])
+                    
+                    print(f"{name} exited the area at {people_exiting[name]}")
+                    
+            face_names_exit.append(name)
+                    
+    
+            
+            
+        cv2.polylines(frame,[np.array(area1,np.int32)],True,(0,255,0),1)
+        cv2.polylines(frame,[np.array(area2,np.int32)],True,(0,255,0),1)
+        
         buf[i] = face_names
-        buf1[i1] = face_names1
+        
         i = (i + 1) % buf_length
+        
+        buf1[i1] = face_names_exit
+        
         i1 = (i1 + 1) % buf_length1
-
-        # print(buf)
 
         # Display the resulting image
         cv2.imshow('Video', frame)
-        cv2.imshow('Video1', frame1)
-
-        # Hit 'q' on the keyboard to quit!
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+    
+        if cv2.waitKey(1) == 27:
             break
 
     # Release handle to the webcam
     video_capture1.release()
-    video_capture2.release()
+    # video_capture2.release()
     cv2.destroyAllWindows()
+    # print(mouse_coord)
 
 
 # @login_required(login_url='/app/login/')
@@ -258,10 +300,24 @@ def detected(request):
     if request.method == 'GET':
         date_formatted = datetime.datetime.today().date()
         date = request.GET.get('search_box', None)
-        if date is not None:
-            date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-        det_list = Detected_in.objects.filter(entry__date=date_formatted).order_by('entry').reverse()
-
+        
+        if date:
+            try:
+                date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+                
+            except ValueError:
+                date_formatted=datetime.datetime.today().date()
+               
+        # if date is not None:
+        #     date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+        
+        name = request.GET.get('name',None)
+        if name is not None:
+            det_list = Detected_in.objects.filter(entry__date=date_formatted,name = name).order_by('-entry')
+        else:
+            det_list = Detected_in.objects.filter(entry__date=date_formatted).order_by('-entry')
+        
+            
     # det_list = Detected.objects.all().order_by('time_stamp').reverse()
     return render(request, 'app/detected.html', {'det_list': det_list, 'date': date_formatted})
 
@@ -269,21 +325,35 @@ def detected(request):
 # @login_required(login_url='/app/login/')
 def detected_out(request):
     if request.method == 'GET':
+        # Set default date to today
         date_formatted = datetime.datetime.today().date()
+        
+        # Get date from the request
         date = request.GET.get('search_box', None)
-        if date is not None:
-            date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-        det_list = Detected_out.objects.filter(out__date=date_formatted).order_by('out').reverse()
+        if date:
+            try:
+                # Parse the provided date
+                date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+            except ValueError:
+                # Fallback to today's date if parsing fails
+                date_formatted = datetime.datetime.today().date()
 
-    # det_list = Detected.objects.all().order_by('time_stamp').reverse()
+        # Get name from the request (optional filtering)
+        name = request.GET.get('name', None)
+        if name:
+            det_list = Detected_out.objects.filter(out__date=date_formatted, name=name).order_by('-out')
+        else:
+            det_list = Detected_out.objects.filter(out__date=date_formatted).order_by('-out')
+
+    # Render the detectedout.html template with the filtered data
     return render(request, 'app/detectedout.html', {'det_list': det_list, 'date': date_formatted})
 
 
 # @login_required(login_url='/app/login/')
 def identify(request):
     video_capture1 = cv2.VideoCapture(0)
-    video_capture2 = cv2.VideoCapture(1)
-    identify_faces(video_capture1, video_capture2)
+    # video_capture2 = cv2.VideoCapture(1)
+    identify_faces(video_capture1)
     return HttpResponseRedirect(reverse('index'))
 
 

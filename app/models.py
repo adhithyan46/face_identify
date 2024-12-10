@@ -46,6 +46,7 @@ class Employee(models.Model):
 class Detected_in(models.Model):
 	emp_id = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True)
 	entry = models.DateTimeField()
+	name = models.CharField(max_length=100,default= 'Unknown')
 	photo = models.ImageField(upload_to='detected/', default='app/facerec/detected/noimg.png')
 
 	def __str__(self):
@@ -56,6 +57,7 @@ class Detected_in(models.Model):
 class Detected_out(models.Model):
 	emp_id = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True)
 	out = models.DateTimeField()
+	name = models.CharField(max_length=100,default= 'Unknown')
 	photo = models.ImageField(upload_to='detected/', default='app/facerec/detected/noimg.png')
 
 

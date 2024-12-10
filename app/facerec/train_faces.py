@@ -14,7 +14,7 @@ from django.contrib import messages
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 
-def train(train_dir, model_save_path=None, n_neighbors=None, knn_algo='ball_tree', verbose=False):
+def train(train_dir, model_save_path=None, n_neighbors=9, knn_algo='ball_tree', verbose=False):
     """
     Trains a k-nearest neighbors classifier for face recognition.
 

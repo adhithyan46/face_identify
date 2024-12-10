@@ -597,6 +597,8 @@ pre code {
 .container {
   margin-right: auto;
   margin-left: auto;
+  margin-top: auto;
+  margin-bottom: auto;
   padding-right: 15px;
   padding-left: 15px;
   width: 100%;
@@ -1780,20 +1782,22 @@ select.form-control-lg:not([size]):not([multiple]), .input-group-lg > select.for
   }
 }
 
-.btn {
-  display: inline-block;
-  font-weight: normal;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: middle;
-  user-select: none;
-  border: 1px solid transparent;
-  padding: 0.5rem 0.75rem;
-  font-size: 1rem;
-  line-height: 1.25;
-  border-radius: 0.25rem;
-  transition: all 0.15s ease-in-out;
+.btn-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Three equal columns */
+  gap: 20px; /* Add spacing between buttons */
 }
+.btn {
+    display: inline-block; /* Ensures buttons are inline and block-like */
+    width: 200px; /* Set a fixed width for all buttons */
+    height: 50px; /* Set a fixed height for all buttons */
+    font-size: 16px; /* Standardize font size */
+    line-height: 50px; /* Center text vertically */
+    text-align: center; /* Center text horizontally */
+    margin: 10px; /* Add spacing around buttons */
+  }
+
+
 
 .btn:focus, .btn:hover {
   text-decoration: none;
@@ -1818,9 +1822,12 @@ fieldset[disabled] a.btn {
 }
 
 .btn-primary {
+  margin-bottom: 10px;
   color: #fff;
   background-color: #007bff;
   border-color: #007bff;
+ 
+
 }
 
 .btn-primary:hover {

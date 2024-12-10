@@ -18,7 +18,7 @@
     #myTable {
       border-collapse: collapse;
       width: 100%;
-      border: 1px solid #ddd;
+      border: 1px solid #ddd; 
       font-size: 18px;
     }
 
@@ -48,7 +48,7 @@
     <button id="search_submit" type="submit" >Submit</button>
 </form>
 <br>
-
+ 
 <strong>Date: {{ date|date:"D, d M, Y" }}</strong>
 
   <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for name.." style="float: right; padding: 10px;">
@@ -56,13 +56,13 @@
 
   <table id="myTable">
     <tr class="header">
-      	<th width="200">ID</th>
+      	<th width="200">Name</th>
       	<th width="300">timestamp</th>
   	</tr>
   	{% for det in det_list %}
 
         <tr>
-            <td>{{det.emp_id}}</td>
+            <td>{{det.name}}</td>
             <td>{{det.entry}}</td>
             
 
