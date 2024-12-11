@@ -222,13 +222,13 @@ def identify_faces(video_capture1):
         cv2.polylines(frame,[np.array(area1,np.int32)],True,(0,255,0),2)
         cv2.polylines(frame,[np.array(area2,np.int32)],True,(0,255,0),2)
         
-        # buf[i] = face_names
+        buf[i] = face_names
         
-        # i = (i + 1) % buf_length
+        i = (i + 1) % buf_length
         
-        # buf1[i1] = face_names_exit
+        buf1[i1] = face_names_exit
         
-        # i1 = (i1 + 1) % buf_length1
+        i1 = (i1 + 1) % buf_length1
 
         # Display the resulting image
         cv2.imshow('Video', frame)
