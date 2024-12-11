@@ -1,38 +1,41 @@
-import math
+import datetime
+import numpy as np
+import cv2
 
-class Tracker :
-    def __init__(self):
-        self.center_point ={}
-        self.count_id = 0
-        
-    def update(self,object_rectangle):
-        object_bbox_id = []
-        
-        for rect in object_rectangle: 
-            x,y,w,h = rect
-            cx = (x + x + w) // 2
-            cy = (y + y + h) // 2
+area1 = [(470,83), (470, 386), (289, 386), (289, 83)]
+area2 = [(274,83),(274, 386) ,(167, 386), (167, 83)]
+
+movement_tracker = {}
+people_entering = {}
+people_exiting = {}
+
+def track_movement(name, bbox):
+    
+    
+    global movement_tracker,people_entering,people_exiting
+    
+    top, right, bottom, left = bbox
+    centroid = ((left + right) // 2, (top + bottom) // 2)
+    
+    
+    area1_result = cv2.pointPolygonTest(np.array(area1, np.int32),centroid,False) >= 0
+    area2_result = cv2.pointPolygonTest(np.array(area2, np.int32),centroid,False) >= 0
+    
+    if area1_result:
+        movement_tracker[name] = movement_tracker.get(name, []) + ['area1']
+        print(f'{name} detected at area1')
+    elif area2_result:
+        movement_tracker[name] = movement_tracker.get(name, []) + ['area2']
+        print(f'{name} detected at area2')
+
+    if movement_tracker.get(name) == [['area1'],['area2']]:
+        if name not in people_entering:
+            people_entering[name] = datetime.datetime.now()
+            print(f'{name} entered at {people_entering[name]}')
+            movement_tracker[name] = []
             
-            same_object_detected = False
-            for id , pre_track in self.center_point.items():
-                dist = math.hypot(cx - pre_track[0],cy - pre_track[1])
-                
-                if dist < 70:
-                    self.center_point[id] = (cx,cy)
-                    object_bbox_id.append([x,y,w,h,id])
-                    same_object_detected = True
-                    break
-                
-            if same_object_detected is False:
-                self.center_point[self.count_id] = (cx,cy)
-                object_bbox_id.append([x,y,w,h,self.count_id])
-                self.count_id += 1
-                
-        new_center_points = {}
-        for bbox_ids in object_bbox_id:
-            _,_,_,_,object_id = bbox_ids
-            center = self.center_point[object_id]
-            new_center_points[object_id] = center
-            
-        self.center_point = new_center_points.copy()
-        return object_bbox_id
+    if movement_tracker.get(name) == [['area2'],['area2']]:
+        if name not in people_exiting:
+            people_exiting[name] = datetime.datetime.now()
+            print(f'{name} exited at {people_exiting[name]}')
+            movement_tracker[name] = []

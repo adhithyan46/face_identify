@@ -70,6 +70,7 @@ class Rep(models.Model):
     department = models.CharField(max_length=50)
     entry = models.DateTimeField()
     out = models.DateTimeField()
+    name = models.CharField(max_length=100)
     def __str__(self):
         emp = Employee.objects.get(name=self.emp_id)
         empdep = Employee.objects.get(department=self.department)
@@ -85,6 +86,7 @@ class report(models.Model):
     department = models.CharField(max_length=50)
     entry = models.DateTimeField()
     out = models.DateTimeField()
+    name = models.CharField(max_length= 100)
     def __str__(self):
         emp = Employee.objects.get(name=self.emp_id)
         empdep = Employee.objects.get(department=self.department)

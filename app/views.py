@@ -35,7 +35,7 @@ from django.http import FileResponse
 from io import BytesIO
 import os
 from django.core.exceptions import ObjectDoesNotExist
-from .tracker import *
+
 import numpy as np
 from collections import defaultdict
 
@@ -47,7 +47,7 @@ area2 = [(274,83),(274, 386) ,(167, 386), (167, 83)]
 people_in_area = defaultdict(int)
 people_entering = {}
 people_exiting = {}
-# @login_required(login_url='/app/login/')
+@login_required(login_url='/app/login/')
  
 def identify1(frame, name, buf, buf_length, known_conf,tracker_id):
     if name in cache:
@@ -132,7 +132,7 @@ from datetime import date
 #     if event == cv2.EVENT_MOUSEMOVE:
 #         mouse_coord.append((x,y))
 #         print(x,y)
-        
+from .tracker import track_movement      
 def identify_faces(video_capture1):
     
     buf_length = 10
@@ -193,38 +193,6 @@ def identify_faces(video_capture1):
             font = cv2.FONT_HERSHEY_DUPLEX
             cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
             
-            # result_area1 = cv2.pointPolygonTest(np.array(area1,np.int32),(left ,top) ,False)
-            
-            # result_area2 = cv2.pointPolygonTest(np.array(area2,np.int32),(left ,top) ,False)
-            
-            # if result_area1 >= 0:
-            #     movement_tracker[name] = movement_tracker.get(name,[]) + ['area1']
-            #     print(f'{name} detected at area1')
-            # elif result_area2 >=0:
-            #     movement_tracker[name] = movement_tracker.get(name,[]) + ['area2']
-            #     print(f'{name} detected at area2')
-
-            # if movement_tracker.get(name) == ['area1' , 'area2']:
-            #     people_entering[name] = datetime.datetime.now()
-            #     # people_entering[name] += 1
-                
-            #     Detected_in.objects.create(name = name, entry = people_entering[name])
-            #     print(f'{name} entered the area at {people_entering[name]}')
-            #     movement_tracker[name] = []
-            # face_names.append(name)
-            
-            # if movement_tracker.get(name) == ['area2', 'area1']:
-            #     people_exiting[name] = datetime.datetime.now()
-                
-            #     Detected_out.objects.create(name = name, out = people_exiting[name])
-            #     print(f'{name} exited at {people_exiting[name]}')
-            #     movement_tracker[name] = []
-                
-            # face_names_exit.append(name)
-            #check for entry
-            
-            
-            
             result_entry = cv2.pointPolygonTest(np.array(area1,np.int32),(left ,top) ,False)
             if result_entry >=0:
                 if name not in people_entering:
@@ -251,16 +219,16 @@ def identify_faces(video_capture1):
     
             
             
-        cv2.polylines(frame,[np.array(area1,np.int32)],True,(0,255,0),1)
-        cv2.polylines(frame,[np.array(area2,np.int32)],True,(0,255,0),1)
+        cv2.polylines(frame,[np.array(area1,np.int32)],True,(0,255,0),2)
+        cv2.polylines(frame,[np.array(area2,np.int32)],True,(0,255,0),2)
         
-        buf[i] = face_names
+        # buf[i] = face_names
         
-        i = (i + 1) % buf_length
+        # i = (i + 1) % buf_length
         
-        buf1[i1] = face_names_exit
+        # buf1[i1] = face_names_exit
         
-        i1 = (i1 + 1) % buf_length1
+        # i1 = (i1 + 1) % buf_length1
 
         # Display the resulting image
         cv2.imshow('Video', frame)
@@ -364,12 +332,13 @@ def admin(request):
 def attendece_rep(request):
     if request.method == 'GET':
         date = request.GET.get('search_box', None)
+        name = request.GET.get('name', None)
         if date is not None and date != '':  # Check if date is selected and not empty
             date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
 
-            det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('emp_id_id').reverse()
-            det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
-            report = Rep.objects.filter(entry__date=date_formatted).order_by('emp_id_id').reverse()
+            det_list_out = Detected_out.objects.filter(out__date=date_formatted,name = name).order_by('-out')
+            det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('-entry')
+            report = Rep.objects.filter(entry__date=date_formatted  ).order_by('emp_id_id').reverse()
 
             attendance_data = []
 
@@ -382,7 +351,7 @@ def attendece_rep(request):
                     total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
                     attendance_data.append({
                         'employee_id': det_out.emp_id_id,
-                        'employee_name': det_out.emp_id,
+                        'employee_name': det_out.name,
                         'entry_time': det_in.entry,
                         'exit_time': det_out.out,
                         'total_time': total_time_str,
@@ -390,7 +359,7 @@ def attendece_rep(request):
                 else:
                     attendance_data.append({
                         'employee_id': det_out.emp_id_id,
-                        'employee_name': det_out.emp_id,
+                        'employee_name': det_out.name,
                         'entry_time': None,
                         'exit_time': det_out.out,
                         'total_time': None,
