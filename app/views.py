@@ -147,7 +147,7 @@ def identify_faces(video_capture1):
 
     # cv2.namedWindow('Video')
     # cv2.setMouseCallback('Video',mouse_coords)
-    movement_tracker = {}
+    
     
     process_this_frame = True
     while True:
@@ -197,11 +197,25 @@ def identify_faces(video_capture1):
             if result_entry >=0:
                 if name not in people_entering:
                     people_entering[name] = datetime.datetime.now()
-                    people_in_area[name] += 1
-            
-                    Detected_in.objects.create(name = name, entry = people_entering[name])
                     
-                    print(f"{name} entered the area at {people_entering[name]}")
+                    try :
+                        employee = Employee.objects.get(name = name)
+                        today = datetime.date.today()
+                        attendance, created = Attendance.objects.get_or_create(
+                            employee = employee,
+                            date = today,
+                            defaults  = {'present' :True}
+                        )
+                        if not created :
+                             attendance.present = True
+                             attendance.save()
+                             
+                        print(f'{name} entered the area at {people_entering[name]}')
+                    except Employee.DoesNotExist:
+                        print(f'Employee {name} not found')
+                    # Detected_in.objects.create(name = name, entry = people_entering[name])
+                    
+                    # print(f"{name} entered the area at {people_entering[name]}")
             face_names.append(name)    
               
               
@@ -209,11 +223,12 @@ def identify_faces(video_capture1):
             result_exit = cv2.pointPolygonTest(np.array(area2,np.int32),(left,top),False)
             if result_exit >=0:
                 if name in people_entering and name not in people_exiting:
-                    people_exiting[name] = datetime.datetime.now()                     
+                    people_exiting[name] = datetime.datetime.now()  
+                                    
                     Detected_out.objects.create(name = name, out = people_exiting[name])
                     
-                    print(f"{name} exited the area at {people_exiting[name]}")
                     
+                    print(f"{name} exited the area at {people_entering[name]}")
             face_names_exit.append(name)
                     
     
@@ -309,7 +324,7 @@ def detected_out(request):
         # Get name from the request (optional filtering)
         name = request.GET.get('name', None)
         if name:
-            det_list = Detected_out.objects.filter(out__date=date_formatted, name=name).order_by('-out')
+            det_list = Detected_out.objects.filter(out__date=date_formatted,name = name).order_by('-out')
         else:
             det_list = Detected_out.objects.filter(out__date=date_formatted).order_by('-out')
 
@@ -336,22 +351,30 @@ def attendece_rep(request):
         if date is not None and date != '':  # Check if date is selected and not empty
             date_formatted = datetime.datetime.strptime(date, "%Y-%m-%d").date()
 
-            det_list_out = Detected_out.objects.filter(out__date=date_formatted,name = name).order_by('-out')
+            det_list_out = Detected_out.objects.filter(out__date=date_formatted).order_by('-out')
             det_list_in = Detected_in.objects.filter(entry__date=date_formatted).order_by('-entry')
             report = Rep.objects.filter(entry__date=date_formatted  ).order_by('emp_id_id').reverse()
 
             attendance_data = []
 
+            emp_report_map = {rep.emp_id : rep for rep in report }
+            
             # Process Detected_out entries
             for det_out in det_list_out:
+               
+                report_record = emp_report_map.get(det_out.emp_id_id)
+                emp_name = det_out.name or det_out.emp_id.name
+                employee_id = report_record.emp_id_id if report_record else det_out.emp_id
+                
                 matching_det_in = det_list_in.filter(emp_id_id=det_out.emp_id_id)
-                if matching_det_in.exists():
+                if matching_det_in.exists():    
                     det_in = matching_det_in.first()
                     total_time = det_out.out - det_in.entry
+                    
                     total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
                     attendance_data.append({
-                        'employee_id': det_out.emp_id_id,
-                        'employee_name': det_out.name,
+                        'employee_id': employee_id,
+                        'employee_name': emp_name,
                         'entry_time': det_in.entry,
                         'exit_time': det_out.out,
                         'total_time': total_time_str,
@@ -359,7 +382,7 @@ def attendece_rep(request):
                 else:
                     attendance_data.append({
                         'employee_id': det_out.emp_id_id,
-                        'employee_name': det_out.name,
+                        'employee_name': emp_name,
                         'entry_time': None,
                         'exit_time': det_out.out,
                         'total_time': None,
@@ -367,10 +390,12 @@ def attendece_rep(request):
 
             # Process Detected_in entries without a corresponding Detected_out entry
             for det_in in det_list_in:
+                emp_name = det_in.name
                 if not det_list_out.filter(emp_id_id=det_in.emp_id_id).exists():
+                    
                     attendance_data.append({
                         'employee_id': det_in.emp_id_id,
-                        'employee_name': det_in.emp_id,
+                        'employee_name': emp_name,
                         'entry_time': det_in.entry,
                         'exit_time': None,
                         'total_time': None,
@@ -386,6 +411,8 @@ def attendece_rep(request):
             context = {}
 
         return render(request, 'app/attendencereport.html', context)
+
+
 
 
 from django.utils import timezone
@@ -420,17 +447,32 @@ def attendece_rep2(request):
     if request.method == 'GET':
         start_date = request.GET.get('start_date', None)
         end_date = request.GET.get('end_date', None)
+        name = request.GET.get('name', None)
+        
+        attendance_data = []
         if start_date and end_date:
             start_date_formatted = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
             end_date_formatted = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+            
+           
+            
+            employee_out = Detected_out.objects.filter(out__date__range = (start_date_formatted, end_date_formatted)).values_list('emp_id_id', flat=True)
+            employee_in = Detected_in.objects.filter(entry__date__range = (start_date_formatted, end_date_formatted)).values_list('emp_id_id', flat=True)
 
-            attendance_data = []
-
+            all_employee = set(employee_in) | set(employee_out)
             # Retrieve the distinct employees present in the date range
-            distinct_employees = Detected_in.objects.filter(entry__date__range=(start_date_formatted, end_date_formatted)).values_list('emp_id_id', flat=True).distinct()
-
+            # distinct_employees = Detected_in.objects.filter(entry__date__range=(start_date_formatted, end_date_formatted)).values_list('emp_id_id', flat=True).distinct()
+            
+            if name :
+                all_employee = [
+                    emp_id for emp_id in all_employee
+                    if Detected_in.objects.filter(emp_id_id = emp_id, name = name).exists() or
+                     Detected_out.objects.filter(emp_id_id = emp_id, name = name).exits()
+                    
+                ]
+            
             # Process each employee and date
-            for emp_id in distinct_employees:
+            for emp_id in all_employee:
                 det_list_in = Detected_in.objects.filter(emp_id_id=emp_id, entry__date__range=(start_date_formatted, end_date_formatted))
                 det_list_out = Detected_out.objects.filter(emp_id_id=emp_id, out__date__range=(start_date_formatted, end_date_formatted))
 
@@ -444,9 +486,10 @@ def attendece_rep2(request):
                     if det_in and det_out:
                         total_time = det_out.out - det_in.entry
                         total_time_str = str(datetime.timedelta(seconds=total_time.seconds))
+                        employee_name =  det_in.name
                         attendance_data.append({
-                            'employee_id': emp_id,
-                            'employee_name': det_in.emp_id,
+                            'employee_id': det_in.emp_id,
+                            'employee_name': employee_name,
                             'date': date,
                             'entry_time': det_in.entry,
                             'exit_time': det_out.out,
@@ -906,6 +949,7 @@ def report_pdf(request):
 
 def attendance_by_name(request):
     if request.method == 'GET':
+        
         employee_name = request.GET.get('search_box', None)
 
         det_list_out = Detected_out.objects.filter(emp_id__icontains=employee_name).order_by('emp_id_id').reverse()
@@ -974,6 +1018,8 @@ from django.shortcuts import render
 from .models import Employee, Attendance
 
 
+from django.db import IntegrityError
+
 def attendance_list(request):
     # Check if the user submitted a search query
     date = request.GET.get('date', None)
@@ -987,8 +1033,8 @@ def attendance_list(request):
         employees = Employee.objects.all()
         # Iterate over each employee and get their attendance record for the specified date
         for employee in employees:
-            attendance = Attendance.objects.filter(employee=employee, date=datetime_object)
-            if attendance.exists():
+            attendance = Attendance.objects.filter(employee=employee, date=datetime_object).first()
+            if attendance:
                 attendance_list.append({'employee': employee, 'present': True})
             else:
                 attendance_list.append({'employee': employee, 'present': False})
@@ -997,8 +1043,36 @@ def attendance_list(request):
         attendance_records = Attendance.objects.all()
         for attendance in attendance_records:
             attendance_list.append({'employee': attendance.employee, 'present': attendance.present})
-            return render(request, 'admintemp/attendance.html', {'attendance_list': attendance_list})
+        print(f'list:{attendance_list}')
+           
     return render(request, 'admintemp/attendance.html', {'attendance_list': attendance_list})
+
+
+# @login_required(login_url='/app/login/')
+def add_photos(request):
+    emp_list = Employee.objects.all()
+    return render(request, 'app/add_photos.html', {'emp_list': emp_list})
+
+
+def upload_photos(request, id):
+    emp = get_object_or_404(Employee, id=id)
+    emp_name_id = emp.name + "_" + emp.id
+    save_directory = os.path.join(MEDIA_ROOT, emp_name_id)
+    os.makedirs(save_directory, exist_ok=True)
+    if request.method == 'POST' and request.FILES:
+        uploaded_files = request.FILES.getlist('photos')
+        for uploaded_file in uploaded_files:
+            filename = generate_unique_filename(uploaded_file.name)
+            with open(os.path.join(save_directory, filename), 'wb+') as destination:
+                for chunk in uploaded_file.chunks():
+                    destination.write(chunk)
+        emp.num_photos = len(uploaded_files)
+        emp.save()
+
+        return HttpResponseRedirect(reverse('add_photos'))  # Redirect to the desired page after successful upload
+    # if 'id' in request.GET:
+    #     id=request.GET['id']
+    return render(request, 'admintemp/image_form.html', {'id': id})  # Render a template with a form for file upload
 
 
 # @login_required(login_url='/app/login/')

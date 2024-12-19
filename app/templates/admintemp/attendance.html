@@ -13,6 +13,7 @@
     <thead>
         <tr>
             <th>Employee Name</th>
+            <th> </th>
             <th>Present</th>
         </tr>
     </thead>
@@ -20,7 +21,12 @@
         {% for attendance in attendance_list %}
         <tr>
             <td>{{ attendance.employee.name }}</td>
-            <td>{% if attendance.present %}Yes{% else %}No{% endif %}</td>
+            <td> </td>
+            <td>{% if attendance.present %}
+                Yes
+                {% else %} 
+                No
+                {% endif %}</td>
         </tr>
         {% endfor %}
     </tbody>

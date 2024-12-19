@@ -46,7 +46,7 @@ class Employee(models.Model):
 class Detected_in(models.Model):
 	emp_id = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True)
 	entry = models.DateTimeField()
-	name = models.CharField(max_length=100,default= 'Unknown')
+	name = models.CharField(max_length=100,null = True, blank = True,default= 'Unknown')
 	photo = models.ImageField(upload_to='detected/', default='app/facerec/detected/noimg.png')
 
 	def __str__(self):
@@ -57,26 +57,27 @@ class Detected_in(models.Model):
 class Detected_out(models.Model):
 	emp_id = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True)
 	out = models.DateTimeField()
-	name = models.CharField(max_length=100,default= 'Unknown')
-	photo = models.ImageField(upload_to='detected/', default='app/facerec/detected/noimg.png')
+	name = models.CharField(max_length=100,null = True, blank = True, default= 'Unknown')
+	photo = models.ImageField(upload_to='detected_out/', default='app/facerec/detected_out/noimg.png')
 
-
+	
 	def __str__(self):
 		emp = Employee.objects.get(name=self.emp_id)
-		return f"{emp.name} {self.out}"
+		return f"{emp.name} {self.out} {self.emp_id}"
+	
 
 class Rep(models.Model):
-    emp_id = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True)
+    emp_id = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='reports',null = True)
     department = models.CharField(max_length=50)
     entry = models.DateTimeField()
     out = models.DateTimeField()
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100,default='Unknown')
     def __str__(self):
-        emp = Employee.objects.get(name=self.emp_id)
+        emp = Employee.objects.get(name=self.mp_id)
         empdep = Employee.objects.get(department=self.department)
         empentry = Detected_in.objects.get(entry = self.entry)
         empout = Detected_out.objects.get(out = self.out)
-        return emp.name, empdep.department, empentry.entry, empout.out
+        return f'{emp} {self.emp_id.name} - {self.department} ({self.entry} to {self.out})'
 
 
 
@@ -86,13 +87,13 @@ class report(models.Model):
     department = models.CharField(max_length=50)
     entry = models.DateTimeField()
     out = models.DateTimeField()
-    name = models.CharField(max_length= 100)
+    name = models.CharField(max_length= 100,default='Unknown')
     def __str__(self):
         emp = Employee.objects.get(name=self.emp_id)
         empdep = Employee.objects.get(department=self.department)
         empentry = Detected_in.objects.get(entry = self.entry)
         empout = Detected_out.objects.get(out = self.out)
-        return emp.name, empdep.department, empentry.entry, empout.out
+        return f'{self.emp_id} {self.emp_id.name} {self.department} ({self.entry} to {self.out})'
 
 class Content(models.Model):
     user= models.ForeignKey(Login, on_delete=models.DO_NOTHING)
@@ -106,6 +107,9 @@ class Attendance(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     date = models.DateField()
     present = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f'{self.employee} - {self.date}'
 
 
 

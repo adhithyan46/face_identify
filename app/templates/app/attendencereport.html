@@ -61,7 +61,7 @@
   <table id="myTable">
  	  <thead>
 			  <tr>
-				  <th>Employee ID</th>
+				  <!-- <th>Employee ID</th> -->
 				  <th>Employee Name</th>
 				  <th>Entry Time</th>
 				  <th>Exit Time</th>
@@ -71,8 +71,8 @@
 		  <tbody>
 			  {% for data in attendance_data %}
 				  <tr>
-					  <td>{{ data.employee_id }}</td>
-					  <td>{{ data.name }}</td>
+					  <!-- <td>{{ data.employee_id }}</td> -->
+					  <td>{{ data.employee_name }}</td>
 					  <td>{{ data.entry_time }}</td>
 					  <td>{{ data.exit_time }}</td>
 					  <td>{{ data.total_time }}</td>
